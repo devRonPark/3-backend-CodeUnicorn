@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class CodeUnicornApplication
 
 fun main(args: Array<String>) {
-	runApplication<CodeUnicornApplication>(*args)
+    runApplication<CodeUnicornApplication>(*args)
 }
