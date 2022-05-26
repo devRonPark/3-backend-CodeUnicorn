@@ -37,6 +37,6 @@ tasks.withType<Test> {
 }
 
 // plain.jar 파일 빌드 안되게 하기
-tasks.getByName<Jar>("jar"){
+tasks.getByName<Jar>("jar") {
     enabled = false
 }
