@@ -1,0 +1,34 @@
+# logging setting
+logging:
+    level:
+        root: info
+        org:
+            hibernate:
+                SQL: debug
+                type:
+                    descriptor:
+                        sql:
+                            BasicBinder: trace
+# server setting
+server:
+    port: 8080
+# jpa setting
+spring:
+    jpa:
+        hibernate:
+            ddl-auto: update # 빌드 후, model 에 있는 파일을 읽고 DB에 스키마를 자동으로 생성
+            use-new-id-generator-mappings: true
+            format_sql: true
+        show-sql: true # 실행되는 쿼리문을 보여줌
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.MySQL5InnoDBDialect # 테이블 생성 시 엔진을 InnoDB로 생성
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/code_unicorn_test?serverTimezone=Asia/Seoul # localhost:3306//{DB명}
+        username: # 계정명
+        password: # 비밀번호
+    session:
+        timeout: 1800
+        store-type: jdbc
+        jdbc.initialize-schema: always
