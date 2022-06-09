@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+
+<configuration scan="true" scanPeriod="30 seconds">
+    <springProfile name="local">
+        <property name="LOG_LEVEL" value="INFO"/>
+    </springProfile>
+    <springProfile name="dev">
+        <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
+        <property name="LOG_FILE_PATH" value="logs/dev"/>
+        <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
+        <property name="LOG_FILE_NAME" value="dev_log"/>
+        <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->
+        <property name="ERR_LOG_FILE_NAME" value="dev_error_log"/>
+        <!-- 로그 레벨 지정 -->
+        <property name="LOG_LEVEL" value="INFO"/>
+    </springProfile>
+    <springProfile name="prod">
+        <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
+        <property name="LOG_FILE_PATH" value="logs/prod"/>
+        <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
+        <property name="LOG_FILE_NAME" value="prod_log"/>
+        <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->
+        <property name="ERR_LOG_FILE_NAME" value="prod_error_log"/>
+        <!-- 로그 레벨 지정 -->
+        <property name="LOG_LEVEL" value="WARN"/>
+    </springProfile>
+
+    <property name="LOG_PATTERN_HIGHLIGHTED"
+              value="%highlight(%-5level) %d{yy-MM-dd HH:mm:ss} [%logger{0}:%line] - %msg%n"/>
+    <property name="LOG_PATTERN"
+              value="%-5level %d{yy-MM-dd HH:mm:ss} [%logger{0}:%line] - %msg%n"/>
+
+    <!-- CONSOLE 어펜더 정의 -->
+    <!-- 로컬 개발 환경에 적합 -->
+    <springProfile name="local">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                <pattern>${LOG_PATTERN_HIGHLIGHTED}</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+
+    <!-- FILE 어펜더 정의 -->
+    <!-- 운영 환경에 적합 -->
+    <!-- 일자별로 로그 파일을 적재하되, 100MB를 초과하면 로그 파일 분할 -->
+    <!-- 최대 7일치를 보관하고 나머지는 삭제, 최대 1GB를 초과해도 나머지를 삭제 -->
+    <if condition='!"${spring.profiles.active}".contains("dev")'>
+        <then>
+            <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!-- INFO 레벨 이상의 로그만 저장 -->
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>INFO</level>
+                </filter>
+                <file>${LOG_FILE_PATH}/${LOG_FILE_NAME}.log</file>
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <pattern>${LOG_PATTERN}</pattern>
+                </encoder>
+                <!-- 일자별로 로그파일 적용 -->
+                <rollingPolicy
+                    class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${LOG_FILE_PATH}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+                    <!-- 로그파일의 크기가 너무 커지는 것을 방지하기 위한 옵션 -->
+                    <!-- 100MB를 초과하면 로그 파일 분할 -->
+                    <timeBasedFileNamingAndTriggeringPolicy
+                        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>100MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                    <!-- 일자별 백업파일의 보관기간을 얼마로 정할 것인가에 대한 옵션 -->
+                    <maxHistory>7</maxHistory>
+                    <!-- 전체 파일 크기를 제어하며, 전체 크기 제한을 초과하면 가장 오래된 파일 삭제 -->
+                    <totalSizeCap>1GB</totalSizeCap>
+                </rollingPolicy>
+            </appender>
+            <!-- ERROR_FILE 어펜더 정의 -->
+            <!-- 운영 환경에 적합 -->
+            <!-- 일자별로 로그 파일을 적재 -->
+            <!-- 최대 60일치를 보관 -->
+            <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                    <level>error</level>
+                    <onMatch>ACCEPT</onMatch>
+                    <onMismatch>DENY</onMismatch>
+                </filter>
+                <file>${LOG_FILE_PATH}/${ERR_LOG_FILE_NAME}.log</file>
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <pattern>${LOG_PATTERN}</pattern>
+                </encoder>
+                <rollingPolicy
+                    class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${LOG_FILE_PATH}/${ERR_LOG_FILE_NAME}.%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+                    <timeBasedFileNamingAndTriggeringPolicy
+                        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>100MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                    <maxHistory>60</maxHistory>
+                </rollingPolicy>
+            </appender>
+        </then>
+    </if>
+
+    <root level="${LOG_LEVEL}">
+        <springProfile name="local">
+            <appender-ref ref="CONSOLE"/>
+        </springProfile>
+        <if condition='!"${spring.profiles.active}".contains("dev")'>
+            <then>
+                <appender-ref ref="FILE"/>
+                <appender-ref ref="ERROR_FILE"/>
+            </then>
+        </if>
+    </root>
+</configuration>

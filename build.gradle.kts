@@ -28,6 +28,9 @@ dependencies { // 프로젝트에 필요한 라이브러리 관리
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     // 세션 데이터를 DB에 저장하기 위해 spring-session-jdbc 사용
     implementation("org.springframework.session:spring-session-jdbc")
+    // Logging
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
+    implementation("org.codehaus.janino:janino")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
