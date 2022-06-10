@@ -8,13 +8,16 @@ import org.hibernate.annotations.CreationTimestamp
 import java.time.LocalDateTime
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.GeneratedValue
+import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.Table
 
 @Entity
-@Table(name = "User_Access_Log") // 엔티티와 매핑할 테이블 지정
+@Table(name = "user_access_log") // 엔티티와 매핑할 테이블 지정
 data class UserAccessLog(
-    @Id
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int? = null,
     val user_id: Int,
     val type: String,
     val ip: String?, // 최초 회원가입 IP

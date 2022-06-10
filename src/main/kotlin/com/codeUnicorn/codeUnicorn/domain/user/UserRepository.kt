@@ -13,6 +13,14 @@ interface UserRepository : JpaRepository<User, Int> {
 
     @Modifying
     @Transactional
-    @Query("update User u set u.nickname = :#{#nickname} where u.email = :#{#email}")
-    fun updateNickname(@Param("email") email: String, @Param("nickname") nickname: String): Int?
+    @Query("update User u set u.nickname = :nickname where u.id = :id")
+    fun updateNickname(@Param("id") id: Int, @Param("nickname") nickname: String): Int?
+
+    @Transactional
+    @Query("select u from User u where u.nickname = :nickname")
+    fun findByNickname(@Param("nickname") nickname: String): User?
+
+    @Transactional
+    @Query("update User u set u.profile_path = :profile_path where u.id = :id")
+    fun updateProfile(@Param("id") id: Int, @Param("profile_path") profilePath: String): Int?
 }

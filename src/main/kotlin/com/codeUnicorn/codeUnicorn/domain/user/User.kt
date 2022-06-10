@@ -19,7 +19,7 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Entity
-@Table(name = "User") // 엔티티와 매핑할 테이블 지정
+@Table(name = "user") // 엔티티와 매핑할 테이블 지정
 data class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int? = null,
@@ -28,6 +28,7 @@ data class User(
     var platform_type: String,
     var ip: String?, // 최초 회원가입 IP
     var browser_type: String, // Chrome, Safari, Whale, Firefox, Opera, Edge, Samsung Internet 등
+    var profile_path: String? = null,
     @Enumerated(EnumType.STRING) // Enum 값을 문자열로 저장될 수 있도록 선언
     val role: ROLE_TYPE = ROLE_TYPE.USER,
     @Column(name = "created_at")

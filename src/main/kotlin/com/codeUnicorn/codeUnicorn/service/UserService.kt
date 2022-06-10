@@ -10,12 +10,16 @@ import com.codeUnicorn.codeUnicorn.dto.CreateUserDto
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UserAccessLogDto
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 import javax.transaction.Transactional
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class UserService {
@@ -24,6 +28,13 @@ class UserService {
 
     @Autowired
     private lateinit var userAccessLogRepository: UserAccessLogRepository
+
+    @Transactional
+    fun getUserInfo(userId: Int): User? {
+        val userInfoInDb: User = userRepository.findByIdOrNull(userId) ?: return null
+
+        return userInfoInDb
+    }
 
     // 리턴 값 : { "type": "로그인" || "회원가입", "data": { 사용자 정보 } }
     @Transactional // 트랜잭션 => 실패 => 롤백!
@@ -53,35 +64,33 @@ class UserService {
             // 회원가입 사용자의 브라우저 정보 및 IP 주소 정보 수집
             val browserName: String = this.getBrowserInfo(request)
             val ip: String = this.getClientIp(request)
-
+            val defaultProfilePath: String = "/static/user_default_profile.png"
             // DB 에 저장할 사용자 정보 DTO 생성
             val newUserDto =
-                CreateUserDto(requestUserDto.email, requestUserDto.nickname, platformType, ip, browserName)
+                CreateUserDto(
+                    requestUserDto.email,
+                    requestUserDto.nickname,
+                    platformType,
+                    defaultProfilePath,
+                    ip,
+                    browserName
+                )
             // 사용자 정보 DTO => 사용자 정보 엔티티로 변환
             user = newUserDto.toEntity()
             userRepository.save(user); // 회원 정보 DB에 저장
 
             returnData["type"] = "회원가입"
-            returnData["data"] = user
             // 로그인 처리
         } else {
-
-            // DB에 저장된 닉네임과 일치여부 확인 후 일치하지 않으면 닉네임 업데이트
-            if (userInfoInDb.nickname != nickname) {
-                // 닉네임 업데이트
-                userRepository.updateNickname(email, nickname)
-                // 업데이트 전 조회했던 사용자 엔티티에 업데이트된 닉네임 동기화
-                userInfoInDb.nickname = nickname
-            }
 
             user = userInfoInDb
 
             returnData["type"] = "로그인"
-            returnData["user"] = user
         }
 
         // 세션 발급
-        val session: HttpSession = request.getSession(false)
+        // 세션이 존재하지 않는 경우 신규 세션 발급
+        val session: HttpSession = request.getSession(true)
         // 사용자 객체 데이터 변환 (Object to JSON string)
         val userInfoForSession = jacksonObjectMapper().writeValueAsString(user)
         // 세션에 로그인 회원 정보 보관
@@ -196,5 +205,25 @@ class UserService {
         val session: HttpSession = request.getSession(false) ?: return null
 
         return session.getAttribute("user") as User? ?: return null
+    }
+
+    // 사용자 닉네임 업데이트
+    @Transactional
+    fun updateNickname(userId: Int, nickname: String): Int? {
+        val userWithDuplicatedNickname: User? = userRepository.findByNickname(nickname)
+
+        // 중복되는 닉네임이 이미 존재하는 경우
+        if (userWithDuplicatedNickname != null) {
+            return null
+        }
+
+        // 중복되는 닉네임이 존재하지 않는 경우 사용자 닉네임 업데이트
+        return userRepository.updateNickname(userId, nickname)
+    }
+
+    // 사용자 프로필 업데이트
+    @Transactional
+    fun updateUserProfile(userId: Int, profilePath: String): Int? {
+        return userRepository.updateProfile(userId, profilePath)
     }
 }

@@ -21,12 +21,12 @@ class UserApiControllerTest {
     @MockBean
     private lateinit var userService: UserService
 
-    @DisplayName("만약 이메일, 닉네임 값이 \"\" 으로 들어온다면")
+    @DisplayName("만약 이메일이 \"\" 으로 들어온다면")
     @Test
     fun loginFailTest1() {
-        // 실패 케이스 1 : 이메일, 닉네임 값이 "" 으로 들어온 경우
+        // 실패 케이스 1 : 이메일이 "" 으로 들어온 경우
         // given
-        val userRequest = RequestUserDto("", "")
+        val userRequest = RequestUserDto("", "론이다님")
 
         val json = jacksonObjectMapper().writeValueAsString(userRequest)
         println(json)
@@ -43,9 +43,7 @@ class UserApiControllerTest {
         performLogin.andExpect(MockMvcResultMatchers.status().isBadRequest)
             .andExpect(MockMvcResultMatchers.jsonPath("\$.status").value("400"))
             .andExpect(MockMvcResultMatchers.jsonPath("\$.method").value("POST"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.message").value("요청에 에러가 발생했습니다."))
             .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.errors").isNotEmpty)
             .andDo(MockMvcResultHandlers.print())
     }
 
@@ -73,10 +71,8 @@ class UserApiControllerTest {
             .andExpect(MockMvcResultMatchers.status().isBadRequest)
             .andExpect(MockMvcResultMatchers.jsonPath("\$.status").value("400"))
             .andExpect(MockMvcResultMatchers.jsonPath("\$.method").value("POST"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.message").value("요청에 에러가 발생했습니다."))
+            .andExpect(MockMvcResultMatchers.jsonPath("\$.message").value("닉네임은 1 ~ 60자 이어야 합니다."))
             .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.errors").isNotEmpty)
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.errors.message").value("닉네임은 1 ~ 60자 이어야 합니다."))
             .andDo(MockMvcResultHandlers.print())
     }
 
@@ -103,13 +99,10 @@ class UserApiControllerTest {
             .andExpect(MockMvcResultMatchers.status().isBadRequest)
             .andExpect(MockMvcResultMatchers.jsonPath("\$.status").value("400"))
             .andExpect(MockMvcResultMatchers.jsonPath("\$.method").value("POST"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.message").value("요청에 에러가 발생했습니다."))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.errors").isNotEmpty)
             .andExpect(
-                MockMvcResultMatchers.jsonPath("\$.errors.message")
-                    .value("이메일은 반드시 @gmail.com 혹은 @naver.com 를 포함해야 합니다.")
+                MockMvcResultMatchers.jsonPath("\$.message").value("이메일은 반드시 @gmail.com 혹은 @naver.com 를 포함해야 합니다.")
             )
+            .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
             .andDo(MockMvcResultHandlers.print())
     }
 
@@ -137,13 +130,10 @@ class UserApiControllerTest {
             .andExpect(MockMvcResultMatchers.status().isBadRequest)
             .andExpect(MockMvcResultMatchers.jsonPath("\$.status").value("400"))
             .andExpect(MockMvcResultMatchers.jsonPath("\$.method").value("POST"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.message").value("요청에 에러가 발생했습니다."))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.errors").isNotEmpty)
             .andExpect(
-                MockMvcResultMatchers.jsonPath("\$.errors.message")
-                    .value("이메일은 반드시 @gmail.com 혹은 @naver.com 를 포함해야 합니다.")
+                MockMvcResultMatchers.jsonPath("\$.message").value("이메일은 반드시 @gmail.com 혹은 @naver.com 를 포함해야 합니다.")
             )
+            .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
             .andDo(MockMvcResultHandlers.print())
     }
 }

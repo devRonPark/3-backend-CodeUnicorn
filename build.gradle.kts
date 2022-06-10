@@ -31,9 +31,9 @@ dependencies { // 프로젝트에 필요한 라이브러리 관리
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
     implementation("org.codehaus.janino:janino")
+    implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-
     runtimeOnly("mysql:mysql-connector-java") // MySQL
 
     // assertj
