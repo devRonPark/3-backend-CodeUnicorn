@@ -37,9 +37,11 @@ class CourseApiController {
         val courseList = courseService.getCourseList(category, paging)
         val courseCount = courseService.getCourseCount(category)
 
-        val courseInfo: MutableMap<String, String?> = mutableMapOf<String, String?>()
-        courseInfo["courses"] = courseList.toString()
-        courseInfo["courseCount"] = courseCount.toString()
+        val courseListInfo = courseList?.toTypedArray()
+
+        val courseInfo = HashMap<String, Any>()
+        courseListInfo?.let { courseInfo.put("courses", it) }
+        courseInfo["courseCount"] = courseCount
 
         val successResponse = SuccessResponse(200, courseInfo)
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)

@@ -14,7 +14,7 @@ spring:
             max-request-size: 10MB
     jpa:
         hibernate:
-            ddl-auto: validate # 아무것도 실행하지 않는다.
+            ddl-auto: none # 아무것도 실행하지 않는다.
             use-new-id-generator-mappings: true
         show-sql: true # 실행되는 쿼리문을 보여줌
         properties:

@@ -12,7 +12,7 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     // 전체 코스 정보 조회
     @Transactional
     @Query(value = "select * from course limit :paging, 9", nativeQuery = true)
-    fun findByAllCourse(@Param("paging") paging: Int): List<CourseInfo>?
+    fun findByAllCourse(@Param("paging") paging: Int): List<CourseInfo>
 
     // 특정 코스 정보 조회
     @Transactional
@@ -20,6 +20,7 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
         value = "select * from Course  where category = :category limit :paging, 9",
         nativeQuery = true
     )
+
     fun findByCourse(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo>?
 
     // 전체 코스 갯수

@@ -55,7 +55,7 @@ data class Course(
 @Table(name = "course")
 data class CourseInfo(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
+    val id: Int,
     var category: String,
     var type: Int,
     var name: String,
@@ -66,5 +66,5 @@ data class CourseInfo(
     @Column(name = "ratings_count")
     var ratingsCount: Int,
     @Column(name = "user_count")
-    var userCount: Int? = 0
+    var userCount: Int?
 )
