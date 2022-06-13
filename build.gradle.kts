@@ -19,7 +19,7 @@ noArg {
 }
 
 group = "com.codeUnicorn"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories { // 라이브러리들을 어떤 원격 저장소에서 받을 지 선택
