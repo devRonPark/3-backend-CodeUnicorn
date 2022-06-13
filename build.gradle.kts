@@ -11,7 +11,7 @@ plugins { // 스프링 부트의 의존성을 관리해주는 Plugin
 }
 
 group = "com.codeUnicorn"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories { // 라이브러리들을 어떤 원격 저장소에서 받을 지 선택
@@ -31,7 +31,7 @@ dependencies { // 프로젝트에 필요한 라이브러리 관리
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
     implementation("org.codehaus.janino:janino")
-    implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
+    // implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java") // MySQL

@@ -22,10 +22,10 @@ spring:
                 dialect: org.hibernate.dialect.MySQL5InnoDBDialect # 테이블 생성 시 엔진을 InnoDB로 생성
                 format_sql: true # SQL 을 좀 더 예쁘게 출력하고 싶다
                 use_sql_comments: false # 디버깅이 용이하도록 SQL 문 이외에 추가적인 정보 출력
-        session:
-            timeout: 86400 # 세션 기간 하루로 설정
-            store-type: jdbc
-            jdbc.initialize-schema: always
+    session:
+        timeout: 86400 # 세션 기간 하루로 설정
+        store-type: jdbc
+        jdbc.initialize-schema: always
 logging:
     org:
         hibernate:
@@ -34,15 +34,15 @@ logging:
                 descriptor:
                     sql:
                         BasicBinder: TRACE # SQL 문에 바인딩된 파라미터 값을 로그로 출력하기 위한 설정.
-cloud:
-    aws:
-        credentials:
-            accessKey: # 엑세스 키 ID (AWS S3에서 발급 받은 키)
-            secretKey: # 비밀 엑세스 키 ID (AWS S3에서 발급 받은 키)
-        s3:
-            bucket: # 버킷이름 (자신이 설정한 버킷이름)
-            dir: images
-        region:
-            static: ap-northeast-2 # 버킷 지역(서울은 ap-northeast-2)
-        stack:
-            auto: false
+#cloud:
+#    aws:
+#        credentials:
+#            accessKey: # 엑세스 키 ID (AWS S3에서 발급 받은 키)
+#            secretKey: # 비밀 엑세스 키 ID (AWS S3에서 발급 받은 키)
+#        s3:
+#            bucket: # 버킷이름 (자신이 설정한 버킷이름)
+#            dir: images
+#        region:
+#            static: ap-northeast-2 # 버킷 지역(서울은 ap-northeast-2)
+#        stack:
+#            auto: false
