@@ -1,5 +1,6 @@
 package com.codeUnicorn.codeUnicorn.filter
 
+import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.exception.UserAccessForbiddenException
@@ -10,7 +11,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.util.PatternMatchUtils
-import java.time.LocalDateTime
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.ServletRequest
@@ -26,7 +26,7 @@ class LoginCheckFilter : Filter {
     private val whitelist: Array<String> = arrayOf(
         "/", "/users/login",
         "/users/logout",
-        "/static/*"
+        "/static/*", "/users/test"
     )
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
@@ -40,26 +40,20 @@ class LoginCheckFilter : Filter {
                 log.info("인증 체크 로직 실행 {}", requestURI)
                 // 로그인 세션이 존재하면 세션 반환, 세션이 존재하지 않으면 null 값 반환
                 val session = httpRequest.getSession(false)
+
+                // 현재 로그인하지 않은 사용자의 접근 시 401 Unauthorized 에러 발생
                 if (session?.getAttribute("user") == null) {
                     log.info("미인증 사용자 요청 {}", requestURI)
 
-                    // 401 응답
-                    val errorResponse = ErrorResponse().apply {
-                        this.status = HttpStatus.UNAUTHORIZED.value().toString()
-                        this.message = "로그인하지 않은 사용자가 접근할 수 없는 리소스입니다."
-                        this.method = request.method
-                        this.path = request.requestURI.toString()
-                        this.timestamp = LocalDateTime.now()
-                    }
-
-                    throw UserUnauthorizedException("로그인하지 않은 사용자가 접근할 수 없는 리소스입니다.")
+                    throw UserUnauthorizedException(ExceptionMessage.UNAUTHORIZED_USER_CANNOT_ACCESS)
                 }
 
                 val userInfoInSession: User? =
                     jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
 
+                // request URI 에 로그인한 사용자의 userId 가 포함되어 있지 않으면 403 Forbidden 에러 발생
                 if (!requestURI.contains(userInfoInSession?.id.toString())) {
-                    throw UserAccessForbiddenException("현재 사용자가 접근할 수 없는 리소스입니다.")
+                    throw UserAccessForbiddenException(ExceptionMessage.CURRENT_USER_CANNOT_ACCESS)
                 }
             }
             chain?.doFilter(request, response)
@@ -70,10 +64,9 @@ class LoginCheckFilter : Filter {
             // ErrorResponse
             val errorResponse = ErrorResponse().apply {
                 this.status = HttpStatus.UNAUTHORIZED.value().toString()
-                this.message = e.message
+                this.message = e.message.toString()
                 this.method = request.method
                 this.path = request.requestURI.toString()
-                this.timestamp = LocalDateTime.now()
             }
             jacksonObjectMapper().writeValue(httpResponse.writer, errorResponse)
         } catch (e: UserAccessForbiddenException) {
@@ -83,10 +76,9 @@ class LoginCheckFilter : Filter {
             // ErrorResponse
             val errorResponse = ErrorResponse().apply {
                 this.status = HttpStatus.FORBIDDEN.value().toString()
-                this.message = e.message
+                this.message = e.message.toString()
                 this.method = request.method
                 this.path = request.requestURI.toString()
-                this.timestamp = LocalDateTime.now()
             }
             jacksonObjectMapper().writeValue(httpResponse.writer, errorResponse)
         }

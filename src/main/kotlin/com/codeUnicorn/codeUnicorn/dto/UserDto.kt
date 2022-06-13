@@ -38,19 +38,19 @@ data class UpdateNicknameUserDto(
 data class CreateUserDto(
     private val email: String,
     private val nickname: String?, // 빈 값 허용
-    private val platform_type: String,
-    private val profile_path: String,
+    private val platformType: String,
+    private val profilePath: String,
     private val ip: String?,
-    private val browser_type: String,
+    private val browserType: String,
 ) {
     fun toEntity(): User {
         return User(
             email = this.email,
             nickname = this.nickname,
-            platform_type = this.platform_type,
-            profile_path = this.profile_path,
+            platformType = this.platformType,
+            profilePath = this.profilePath,
             ip = this.ip,
-            browser_type = this.browser_type
+            browserType = this.browserType
         )
     }
 }

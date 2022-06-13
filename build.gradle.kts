@@ -6,8 +6,16 @@ plugins { // 스프링 부트의 의존성을 관리해주는 Plugin
     id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
     id("org.jlleitschuh.gradle.ktlint-idea") version "10.2.0"
     kotlin("jvm") version "1.6.21"
-    kotlin("plugin.spring") version "1.6.21"
-    kotlin("plugin.jpa") version "1.3.61"
+    kotlin("plugin.spring") version "1.6.21" // wrapped all-open
+    kotlin("plugin.jpa") version "1.3.61" // wrapped no-arg
+}
+
+allOpen {
+    annotation("javax.persistence.Entity") // @Entity가 붙은 클래스에 한해서만 all open 플러그인을 적용
+}
+
+noArg {
+    annotation("javax.persistence.Entity") // @Entity가 붙은 클래스에 한해서만 no arg 플러그인을 적용
 }
 
 group = "com.codeUnicorn"

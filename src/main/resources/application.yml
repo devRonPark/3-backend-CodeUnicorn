@@ -14,7 +14,7 @@ spring:
             max-request-size: 10MB
     jpa:
         hibernate:
-            ddl-auto: none # 아무것도 실행하지 않는다.
+            ddl-auto: validate # 아무것도 실행하지 않는다.
             use-new-id-generator-mappings: true
         show-sql: true # 실행되는 쿼리문을 보여줌
         properties:
@@ -22,10 +22,11 @@ spring:
                 dialect: org.hibernate.dialect.MySQL5InnoDBDialect # 테이블 생성 시 엔진을 InnoDB로 생성
                 format_sql: true # SQL 을 좀 더 예쁘게 출력하고 싶다
                 use_sql_comments: false # 디버깅이 용이하도록 SQL 문 이외에 추가적인 정보 출력
-        session:
-            timeout: 86400 # 세션 기간 하루로 설정
-            store-type: jdbc
-            jdbc.initialize-schema: always
+    session:
+        timeout: 86400 # 세션 기간 하루로 설정
+        store-type: jdbc
+        jdbc:
+            initialize-schema: always
 logging:
     org:
         hibernate:
@@ -38,9 +39,9 @@ cloud:
     aws:
         credentials:
             accessKey: # 엑세스 키 ID (AWS S3에서 발급 받은 키)
-            secretKey: # 비밀 엑세스 키 ID (AWS S3에서 발급 받은 키)
+            secretKey:  # 비밀 엑세스 키 ID (AWS S3에서 발급 받은 키)
         s3:
-            bucket: # 버킷이름 (자신이 설정한 버킷이름)
+            bucket: code-unicorn-service # 버킷이름 (자신이 설정한 버킷이름)
             dir: images
         region:
             static: ap-northeast-2 # 버킷 지역(서울은 ap-northeast-2)

@@ -1,6 +1,7 @@
 package com.codeUnicorn.codeUnicorn.controller
 
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
+import com.codeUnicorn.codeUnicorn.service.S3FileUploadService
 import com.codeUnicorn.codeUnicorn.service.UserService
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.DisplayName
@@ -20,6 +21,9 @@ class UserApiControllerTest {
 
     @MockBean
     private lateinit var userService: UserService
+
+    @MockBean
+    private lateinit var s3FileUploadService: S3FileUploadService
 
     @DisplayName("만약 이메일이 \"\" 으로 들어온다면")
     @Test
