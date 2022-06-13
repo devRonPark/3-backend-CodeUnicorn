@@ -18,14 +18,17 @@ import javax.persistence.Table
 data class UserAccessLog(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int? = null,
-    val user_id: Int,
+    @Column(name = "user_id")
+    val userId: Int,
     val type: String,
     val ip: String?, // 최초 회원가입 IP
-    val browser_type: String?, // Chrome, Safari, Whale, Firefox, Opera, Edge, Samsung Internet 등
-    val session_id: String?,
+    @Column(name = "browser_type")
+    val browserType: String?, // Chrome, Safari, Whale, Firefox, Opera, Edge, Samsung Internet 등
+    @Column(name = "session_id")
+    val sessionId: String?,
     @Column(name = "created_at")
     @JsonSerialize(using = LocalDateTimeSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     @CreationTimestamp // insert 쿼리에 대해 자동으로 생성
-    val createDateTime: LocalDateTime = LocalDateTime.now(),
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 )

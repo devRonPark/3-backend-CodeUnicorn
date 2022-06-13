@@ -11,11 +11,11 @@ data class UserAccessLogDto(
 ) {
     fun toEntity(): UserAccessLog {
         return UserAccessLog(
-            user_id = this.userId,
+            userId = this.userId,
             type = this.type,
             ip = this.ip,
-            browser_type = this.browserType,
-            session_id = this.sessionId
+            browserType = this.browserType,
+            sessionId = this.sessionId
         )
     }
 }

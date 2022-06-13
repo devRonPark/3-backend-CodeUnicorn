@@ -11,16 +11,17 @@ import org.springframework.transaction.annotation.Transactional
 interface UserRepository : JpaRepository<User, Int> {
     fun findByEmail(email: String): User?
 
-    @Modifying
     @Transactional
-    @Query("update User u set u.nickname = :nickname where u.id = :id")
+    @Modifying
+    @Query("update user set nickname = :nickname where id = :id", nativeQuery = true)
     fun updateNickname(@Param("id") id: Int, @Param("nickname") nickname: String): Int?
 
     @Transactional
-    @Query("select u from User u where u.nickname = :nickname")
+    @Query("select * from user where nickname = :nickname", nativeQuery = true)
     fun findByNickname(@Param("nickname") nickname: String): User?
 
     @Transactional
-    @Query("update User u set u.profile_path = :profile_path where u.id = :id")
-    fun updateProfile(@Param("id") id: Int, @Param("profile_path") profilePath: String): Int?
+    @Modifying
+    @Query("update user set profile_path = :profilePath where id = :id", nativeQuery = true)
+    fun updateProfile(@Param("id") id: Int, @Param("profilePath") profilePath: String): Int
 }

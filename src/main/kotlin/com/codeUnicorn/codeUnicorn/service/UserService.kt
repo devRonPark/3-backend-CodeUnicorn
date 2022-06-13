@@ -1,6 +1,7 @@
 package com.codeUnicorn.codeUnicorn.service
 
 import com.codeUnicorn.codeUnicorn.constant.BEHAVIOR_TYPE
+import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.constant.PLATFORM_TYPE
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.domain.user.UserAccessLog
@@ -9,17 +10,19 @@ import com.codeUnicorn.codeUnicorn.domain.user.UserRepository
 import com.codeUnicorn.codeUnicorn.dto.CreateUserDto
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UserAccessLogDto
+import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
+import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.stereotype.Service
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 import javax.transaction.Transactional
+import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Service
 
-private val log = KotlinLogging.logger {}
+val log = KotlinLogging.logger {}
 
 @Service
 class UserService {
@@ -29,11 +32,11 @@ class UserService {
     @Autowired
     private lateinit var userAccessLogRepository: UserAccessLogRepository
 
-    @Transactional
-    fun getUserInfo(userId: Int): User? {
-        val userInfoInDb: User = userRepository.findByIdOrNull(userId) ?: return null
-
-        return userInfoInDb
+    @Throws(UserNotExistException::class)
+    fun getUserInfo(userId: Int): User {
+        // 사용자 정보가 존재하지 않을 시 UserNotExistException 예외 발생
+        return userRepository.findByIdOrNull(userId)
+            ?: throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
     }
 
     // 리턴 값 : { "type": "로그인" || "회원가입", "data": { 사용자 정보 } }
@@ -43,14 +46,14 @@ class UserService {
         request: HttpServletRequest,
         response: HttpServletResponse
     ): MutableMap<String, Any> {
-        var platformType: String = ""
+        var platformType = ""
         val returnData: MutableMap<String, Any> = mutableMapOf()
-        val (email, nickname) = requestUserDto
+        val (email) = requestUserDto
 
         // 이메일로 사용자 존재 여부 파악
         val userInfoInDb: User? = userRepository.findByEmail(email)
 
-        var user: User
+        val user: User
 
         // 회원가입 처리
         if (userInfoInDb == null) {
@@ -64,7 +67,7 @@ class UserService {
             // 회원가입 사용자의 브라우저 정보 및 IP 주소 정보 수집
             val browserName: String = this.getBrowserInfo(request)
             val ip: String = this.getClientIp(request)
-            val defaultProfilePath: String = "/static/user_default_profile.png"
+            val defaultProfilePath = "/static/user_default_profile.png"
             // DB 에 저장할 사용자 정보 DTO 생성
             val newUserDto =
                 CreateUserDto(
@@ -77,7 +80,7 @@ class UserService {
                 )
             // 사용자 정보 DTO => 사용자 정보 엔티티로 변환
             user = newUserDto.toEntity()
-            userRepository.save(user); // 회원 정보 DB에 저장
+            userRepository.save(user) // 회원 정보 DB에 저장
 
             returnData["type"] = "회원가입"
             // 로그인 처리
@@ -101,37 +104,28 @@ class UserService {
         val ip: String = this.getClientIp(request) // IPv4 형식의 주소
 
         // 로그인 로그 쌓기
-        val userAccessLog: UserAccessLogDto? = if ((userInfoInDb != null) && (userInfoInDb.id != null)) {
+        val userAccessLog =
             UserAccessLogDto(
-                userInfoInDb.id,
+                userInfoInDb?.id ?: 0,
                 BEHAVIOR_TYPE.LOGIN.toString(),
                 ip,
                 browserName,
                 session.id
             )
-        } else {
-            null
-        }
-        val userAccessLogEntity: UserAccessLog? = userAccessLog?.toEntity()
 
-        if (userAccessLogEntity != null) {
-            userAccessLogRepository.save(userAccessLogEntity)
-        }
+        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
+
+        userAccessLogRepository.save(userAccessLogEntity)
 
         return returnData
     }
 
-    @Transactional
-    fun logout(request: HttpServletRequest): MutableMap<String, String> {
-        val returnData: MutableMap<String, String> = mutableMapOf()
+    @Throws(SessionNotExistException::class)
+    fun logout(request: HttpServletRequest) {
         // 세션 가져오기
-        val session: HttpSession? = request.getSession(false)
-
-        // 세션이 존재하지 않는 경우
-        if (session == null) {
-            returnData["message"] = "세션이 존재하지 않습니다."
-            return returnData
-        }
+        // 세션이 존재하지 않는 경우 예외 발생(404, 세션이 존재하지 않음)
+        val session: HttpSession = request.getSession(false)
+            ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
 
         // 세션 속 저장되어 있는 사용자 정보 가져오기
         val userInfoInSession: User =
@@ -141,24 +135,16 @@ class UserService {
         session.invalidate()
 
         // 로그아웃 로그 저장
-        val userAccessLog: UserAccessLogDto? =
-            userInfoInSession.id?.let {
-                UserAccessLogDto(
-                    it,
-                    BEHAVIOR_TYPE.LOGIN.toString(),
-                    userInfoInSession.ip,
-                    userInfoInSession.browser_type,
-                    session.id
-                )
-            }
-        val userAccessLogEntity: UserAccessLog? = userAccessLog?.toEntity()
-
-        if (userAccessLogEntity != null) {
-            userAccessLogRepository.save(userAccessLogEntity)
-        }
-
-        returnData["message"] = "로그아웃 성공"
-        return returnData
+        val userAccessLog =
+            UserAccessLogDto(
+                userInfoInSession.id,
+                BEHAVIOR_TYPE.LOGIN.toString(),
+                userInfoInSession.ip,
+                userInfoInSession.browserType,
+                session.id
+            )
+        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
+        userAccessLogRepository.save(userAccessLogEntity)
     }
 
     // 클라이언트 브라우저 정보 가져오기
@@ -201,12 +187,6 @@ class UserService {
         return ip
     }
 
-    fun getSession(request: HttpServletRequest): User? {
-        val session: HttpSession = request.getSession(false) ?: return null
-
-        return session.getAttribute("user") as User? ?: return null
-    }
-
     // 사용자 닉네임 업데이트
     @Transactional
     fun updateNickname(userId: Int, nickname: String): Int? {
@@ -223,7 +203,9 @@ class UserService {
 
     // 사용자 프로필 업데이트
     @Transactional
-    fun updateUserProfile(userId: Int, profilePath: String): Int? {
-        return userRepository.updateProfile(userId, profilePath)
+    fun updateUserProfile(userId: Int, profilePath: String): Int {
+        val updatedUserId: Int = userRepository.updateProfile(userId, profilePath)
+        log.info { "updatedUserId: $updatedUserId" }
+        return updatedUserId
     }
 }

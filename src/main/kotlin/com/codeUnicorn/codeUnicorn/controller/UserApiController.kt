@@ -1,11 +1,20 @@
 package com.codeUnicorn.codeUnicorn.controller
 
+import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
 import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UpdateNicknameUserDto
+import com.codeUnicorn.codeUnicorn.exception.FileNotExistException
+import com.codeUnicorn.codeUnicorn.service.S3FileUploadService
 import com.codeUnicorn.codeUnicorn.service.UserService
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpSession
+import javax.validation.Valid
+import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -21,12 +30,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpSession
-import javax.validation.Valid
-import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
@@ -37,32 +40,23 @@ class UserApiController { // 의존성 주입
     @Autowired // DI
     private lateinit var userService: UserService
 
+    @Autowired // DI
+    private lateinit var s3FileUploadService: S3FileUploadService
+
     // 사용자 정보 조회 API
     @GetMapping(path = ["/{userId}"])
     fun getUserInfo(
         request: HttpServletRequest,
         @PathVariable(value = "userId")
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "userId는 숫자만 가능합니다.")
-        userId: String?
+        userId: String
     ): ResponseEntity<Any> {
-        val user: User? = if (userId != null) userService.getUserInfo(Integer.parseInt(userId)) else null
-        // 조회 결과 사용자 정보가 존재하지 않은 경우
-        if (user == null) {
-            val errorResponse = ErrorResponse().apply {
-                this.status = HttpStatus.NOT_FOUND.value().toString()
-                this.message = "리소스를 찾을 수 없습니다."
-                this.method = request.method
-                this.path = request.requestURI.toString()
-                this.timestamp = LocalDateTime.now()
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
-        }
+        val user: User = userService.getUserInfo(Integer.parseInt(userId))
         // 응답해 줄 userInfo 데이터 가공
         val userInfo: MutableMap<String, String?> = mutableMapOf<String, String?>()
-        userInfo.put("id", user.id.toString())
-        userInfo.put("email", user.email)
-        userInfo.put("nickname", user.nickname)
-        userInfo.put("profile_path", user.profile_path)
+        userInfo["id"] = user.id.toString()
+        userInfo["nickname"] = user.nickname
+        userInfo["profilePath"] = user.profilePath
         val successResponse = SuccessResponse(200, userInfo)
 
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
@@ -89,18 +83,7 @@ class UserApiController { // 의존성 주입
     // 사용자 로그아웃 API
     @DeleteMapping(path = ["/logout"])
     fun logout(request: HttpServletRequest): ResponseEntity<Any?> {
-        val result: MutableMap<String, String> = userService.logout(request)
-
-        if (result["message"] == "세션이 존재하지 않습니다.") {
-            val errorResponse = ErrorResponse().apply {
-                this.status = HttpStatus.BAD_REQUEST.value().toString()
-                this.message = result["message"]
-                this.method = request.method
-                this.path = request.requestURI.toString()
-                this.timestamp = LocalDateTime.now()
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
-        }
+        userService.logout(request)
         return ResponseEntity.noContent().build()
     }
 
@@ -161,10 +144,13 @@ class UserApiController { // 의존성 주입
         @PathVariable(value = "userId")
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "userId는 숫자만 가능합니다.")
         userId: String?,
-        @RequestParam("image") file: MultipartFile
+        @RequestParam("image")
+        file: MultipartFile?
     ): ResponseEntity<Any> {
-        val profilePath: String = "/static/user_default_profile.png"
-        val updatedUserId: Int? = userService.updateUserProfile(Integer.parseInt(userId), profilePath)
+        // S3 스토리지에 사용자 프로필 이미지 업로드
+        val profilePath = if (file != null) s3FileUploadService.uploadFile(file) else throw FileNotExistException(ExceptionMessage.FILE_NOT_EXIST)
+        // 사용자 테이블에 프로필 경로 정보 업데이트
+        val updatedUserId: Int = userService.updateUserProfile(Integer.parseInt(userId), profilePath)
         return ResponseEntity.noContent().build()
     }
 }
