@@ -19,7 +19,6 @@ class CourseService {
         var courseInfoInDb: List<CourseInfo>? = null
         var courseCount: Int = 0
 
-
         if (category == "전체") {
             courseInfoInDb = courseRepository.findByAllCourse(paging) ?: return null
         } else {
