@@ -26,7 +26,7 @@ class LoginCheckFilter : Filter {
     private val whitelist: Array<String> = arrayOf(
         "/", "/users/login",
         "/users/logout",
-        "/static/*", "/users/test"
+        "/static/*", "/users/test", "/*"
     )
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
