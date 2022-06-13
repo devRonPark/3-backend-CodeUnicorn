@@ -11,14 +11,17 @@ import com.codeUnicorn.codeUnicorn.dto.FileUploadLogDto
 import com.codeUnicorn.codeUnicorn.exception.FileNotExistException
 import com.codeUnicorn.codeUnicorn.exception.FileNotSupportedException
 import com.codeUnicorn.codeUnicorn.exception.FileUploadFailException
-import java.io.IOException
-import java.io.InputStream
-import java.util.UUID
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
+import java.io.IOException
+import java.io.InputStream
+import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class S3FileUploadService {
@@ -57,7 +60,14 @@ class S3FileUploadService {
         val inputStream: InputStream = uploadFile.inputStream
 
         try {
-            val objectResult = amazonS3Client.putObject(PutObjectRequest(bucket, "images/$fileName", inputStream, objectMetadata).withCannedAcl(CannedAccessControlList.PublicRead))
+            val objectResult = amazonS3Client.putObject(
+                PutObjectRequest(
+                    bucket,
+                    "images/$fileName",
+                    inputStream,
+                    objectMetadata
+                ).withCannedAcl(CannedAccessControlList.PublicRead)
+            )
             log.info { "objectResult: $objectResult" }
         } catch (e: IOException) {
             throw FileUploadFailException(ExceptionMessage.FILE_UPLOAD_FAIL)

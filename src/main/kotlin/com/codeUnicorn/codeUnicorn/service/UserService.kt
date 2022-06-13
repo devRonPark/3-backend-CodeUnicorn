@@ -13,16 +13,16 @@ import com.codeUnicorn.codeUnicorn.dto.UserAccessLogDto
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpSession
-import javax.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpSession
+import javax.transaction.Transactional
 
-val log = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 @Service
 class UserService {
