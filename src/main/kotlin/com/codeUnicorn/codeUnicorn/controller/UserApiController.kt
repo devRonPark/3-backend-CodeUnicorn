@@ -76,7 +76,6 @@ class UserApiController { // 의존성 주입
         if (result["type"] == "회원가입") {
             return ResponseEntity.status(HttpStatus.CREATED).build()
         }
-
         return ResponseEntity.status(HttpStatus.OK).build()
     }
 
@@ -119,21 +118,8 @@ class UserApiController { // 의존성 주입
         @RequestBody
         updateNicknameUserDto: UpdateNicknameUserDto
     ): ResponseEntity<Any> {
-        log.info("nickname from request: $updateNicknameUserDto.nickname")
-        val updatedUserId: Int? =
-            userService.updateNickname(Integer.parseInt(userId), updateNicknameUserDto.getNickname())
+        userService.updateNickname(Integer.parseInt(userId), updateNicknameUserDto.getNickname())
 
-        if (updatedUserId == null) {
-            // ErrorResponse
-            val errorResponse = ErrorResponse().apply {
-                this.status = HttpStatus.CONFLICT.value().toString()
-                this.message = "이미 존재하는 닉네임입니다."
-                this.method = request.method
-                this.path = request.requestURI.toString()
-                this.timestamp = LocalDateTime.now()
-            }
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse)
-        }
         // 204 응답
         return ResponseEntity.noContent().build()
     }
@@ -150,7 +136,7 @@ class UserApiController { // 의존성 주입
         // S3 스토리지에 사용자 프로필 이미지 업로드
         val profilePath = if (file != null) s3FileUploadService.uploadFile(file) else throw FileNotExistException(ExceptionMessage.FILE_NOT_EXIST)
         // 사용자 테이블에 프로필 경로 정보 업데이트
-        val updatedUserId: Int = userService.updateUserProfile(Integer.parseInt(userId), profilePath)
+        userService.updateUserProfile(Integer.parseInt(userId), profilePath)
         return ResponseEntity.noContent().build()
     }
 }

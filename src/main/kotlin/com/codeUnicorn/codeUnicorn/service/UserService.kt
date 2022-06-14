@@ -10,19 +10,17 @@ import com.codeUnicorn.codeUnicorn.domain.user.UserRepository
 import com.codeUnicorn.codeUnicorn.dto.CreateUserDto
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UserAccessLogDto
+import com.codeUnicorn.codeUnicorn.exception.NicknameAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.stereotype.Service
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 import javax.transaction.Transactional
-
-private val log = KotlinLogging.logger {}
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Service
 
 @Service
 class UserService {
@@ -194,7 +192,7 @@ class UserService {
 
         // 중복되는 닉네임이 이미 존재하는 경우
         if (userWithDuplicatedNickname != null) {
-            return null
+            throw NicknameAlreadyExistException(ExceptionMessage.NICKNAME_ALREADY_EXIST)
         }
 
         // 중복되는 닉네임이 존재하지 않는 경우 사용자 닉네임 업데이트
@@ -203,9 +201,7 @@ class UserService {
 
     // 사용자 프로필 업데이트
     @Transactional
-    fun updateUserProfile(userId: Int, profilePath: String): Int {
-        val updatedUserId: Int = userRepository.updateProfile(userId, profilePath)
-        log.info { "updatedUserId: $updatedUserId" }
-        return updatedUserId
+    fun updateUserProfile(userId: Int, profilePath: String) {
+        userRepository.updateProfile(userId, profilePath)
     }
 }

@@ -4,6 +4,9 @@ import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.controller.UserApiController
 import com.codeUnicorn.codeUnicorn.domain.Error
 import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
+import javax.validation.ConstraintViolationException
 import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -12,11 +15,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.multipart.MultipartException
-import javax.servlet.http.HttpServletRequest
 
 @RestControllerAdvice(basePackageClasses = [UserApiController::class])
 class UserControllerAdvice {
-    // request body, request param, query 에 대한 예외 처리
+    // request body, query 에 대한 예외 처리
     @ExceptionHandler(value = [MethodArgumentNotValidException::class, NumberFormatException::class])
     fun handleMethodArgumentNotValidException(
         e: MethodArgumentNotValidException,
@@ -39,6 +41,29 @@ class UserControllerAdvice {
             this.status = HttpStatus.BAD_REQUEST.value().toString()
             this.message = errors[0].message ?: "요청에 에러가 발생했습니다."
             this.method = request.method
+            this.path = request.requestURI.toString()
+        }
+        // ResponseEntity
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+    }
+
+    // request param 에 대한 예외 처리
+    @ExceptionHandler(value = [ConstraintViolationException::class])
+    fun handleConstraintViolationException(
+        e: ConstraintViolationException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        val errors = mutableListOf<Error>()
+
+        e.constraintViolations.forEach {
+            val error = Error(it.propertyPath.last().name, it.message)
+            errors.add(error)
+        }
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.BAD_REQUEST.value().toString()
+            this.message = errors[0].message.toString()
+            this.method = request.method.toString()
             this.path = request.requestURI.toString()
         }
         // ResponseEntity
@@ -79,6 +104,22 @@ class UserControllerAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
     }
 
+    @ExceptionHandler(value = [NicknameAlreadyExistException::class])
+    fun handleNicknameAlreadyExistException(
+        e: NicknameAlreadyExistException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.CONFLICT.value().toString()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+            this.timestamp = LocalDateTime.now()
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse)
+    }
+
     // 파일 존재하지 않을 시 발생
     @ExceptionHandler(value = [MultipartException::class, FileNotExistException::class])
     fun handleFileNotExistException(
@@ -95,6 +136,7 @@ class UserControllerAdvice {
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
     }
+
     // 지원하는 파일 형식에 어긋날 시 발생
     @ExceptionHandler(value = [FileNotSupportedException::class])
     fun handleFileNotSupportedException(
@@ -128,6 +170,7 @@ class UserControllerAdvice {
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
     }
+
     // 파일 업로드 실패 시 발생
     @ExceptionHandler(value = [FileUploadFailException::class])
     fun handleFileUploadException(

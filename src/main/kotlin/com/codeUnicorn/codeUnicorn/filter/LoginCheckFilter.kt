@@ -6,17 +6,17 @@ import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.exception.UserAccessForbiddenException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.stereotype.Component
-import org.springframework.util.PatternMatchUtils
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import mu.KotlinLogging
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
+import org.springframework.util.PatternMatchUtils
 
 private val log = KotlinLogging.logger {}
 
@@ -25,8 +25,8 @@ class LoginCheckFilter : Filter {
     // 인증과 무관하게 항상 접근을 허용하는 요청 Url
     private val whitelist: Array<String> = arrayOf(
         "/", "/users/login",
-        "/users/logout",
-        "/static/*", "/users/test", "/*"
+        "/users/logout", "/courses/*",
+        "/static/*"
     )
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
@@ -51,9 +51,18 @@ class LoginCheckFilter : Filter {
                 val userInfoInSession: User? =
                     jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
 
-                // request URI 에 로그인한 사용자의 userId 가 포함되어 있지 않으면 403 Forbidden 에러 발생
-                if (!requestURI.contains(userInfoInSession?.id.toString())) {
-                    throw UserAccessForbiddenException(ExceptionMessage.CURRENT_USER_CANNOT_ACCESS)
+                // userId 에 대한 유효성 검증 처리
+                if (requestURI.contains("/users")) {
+                    /*
+                        /users/{userId} || /users/{userId}/nickname || /users/{userId}/profile
+                        userId 가 숫자인 경우 true
+                    */
+                    val regex = "/users/(\\d+)/?\\w*".toRegex()
+
+                    // request URI 에 로그인한 사용자의 userId 가 포함되어 있지 않으면 403 Forbidden 에러 발생
+                    if (requestURI.matches(regex) && !requestURI.contains(userInfoInSession?.id.toString())) {
+                        throw UserAccessForbiddenException(ExceptionMessage.CURRENT_USER_CANNOT_ACCESS)
+                    }
                 }
             }
             chain?.doFilter(request, response)
