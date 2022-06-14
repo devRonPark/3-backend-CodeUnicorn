@@ -20,7 +20,6 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
         value = "select * from Course  where category = :category limit :paging, 9",
         nativeQuery = true
     )
-
     fun findByCourse(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo>?
 
     // 전체 코스 갯수

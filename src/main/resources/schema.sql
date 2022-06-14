@@ -47,7 +47,7 @@ create TABLE IF NOT EXISTS course(
     instructor_id INT UNSIGNED NOT NULL,
     category varchar(30),
     type tinyint DEFAULT 0,
-    name varchar(30) NOT NULL,
+    name varchar(50) NOT NULL,
     description varchar(255),
     price int DEFAULT 0,
     discount_rate tinyint DEFAULT 0,
