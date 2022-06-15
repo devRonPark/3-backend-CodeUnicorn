@@ -12,5 +12,6 @@ class WebConfig : WebMvcConfigurer {
         registry.addMapping("/**")
             .allowedOriginPatterns("*")
             .allowedMethods("GET", "POST", "PATCH")
+            .allowCredentials(true)
     }
 }
