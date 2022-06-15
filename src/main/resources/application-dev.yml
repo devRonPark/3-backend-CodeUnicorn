@@ -1,7 +1,22 @@
 # spring.active.profiles=dev 일 경우 설정
 spring:
     datasource:
-        url: jdbc:mysql://localhost:3306/dev?serverTimezone=Asia/Seoul # localhost:3306//{DB명}
+        url:
         username: # 계정명
         password: # 비밀번호
         driver-class-name: com.mysql.cj.jdbc.Driver
+hibernate:
+    ejb:
+        naming_strategy: org.hibernate.cfg.ImprovedNamingStrategy # 카멜 타입인 변수명과 언더바를 이용하는 컬럼명 사이의 불일치 해결
+cloud:
+    aws:
+        credentials:
+            accessKey:  # 엑세스 키 ID (AWS S3에서 발급 받은 키)
+            secretKey: # 비밀 엑세스 키 ID (AWS S3에서 발급 받은 키)
+        s3:
+            bucket: # 버킷이름 (자신이 설정한 버킷이름)
+            dir:
+        region:
+            static: ap-northeast-2 # 버킷 지역(서울은 ap-northeast-2)
+        stack:
+            auto: false

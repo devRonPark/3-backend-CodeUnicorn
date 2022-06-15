@@ -15,9 +15,9 @@ pipeline {
         stage('Clone') {
           steps {
             echo 'Clonning Repository'
-            git url: 'https://github.com/xhfkd00/CITest.git',
+            git url: 'https://github.com/adapterz/3-backend-CodeUnicorn.git',
               branch: 'main',
-              credentialsId: 'github-test'
+              credentialsId: 'guthub_access_token'
             }
             post {
              success {
@@ -35,7 +35,7 @@ pipeline {
             echo 'Bulid Gradle'
             dir('.'){
                 sh """
-                cp /var/jenkins_home/application-prod.yml /var/jenkins_home/workspace/test/src/main/resources/application-prod.yml
+                cp /var/jenkins_home/application-prod.yml /var/jenkins_home/workspace/CodeUnicon/src/main/resources/application-prod.yml
                 gradle clean build -x test
                 """
             }
@@ -56,10 +56,10 @@ pipeline {
           steps {
             echo 'Bulid Docker'
             script {
-            dir('../test'){
+            dir('../CodeUnicon'){
             // 생성된 도커 이미지가 있으면 삭제 후 빌드, 아니면 그냥 빌드
             sh """#!/bin/bash
-            if [ -z docker images | grep xhfkd00/codeunicorn:1.0 ]; then
+            if [ -z "docker images | grep xhfkd00/codeunicorn:1.0" ]; then
                docker build -t xhfkd00/codeunicorn:1.0 .
             else
                docker rmi xhfkd00/codeunicorn:1.0
@@ -86,7 +86,7 @@ pipeline {
           steps {
             echo 'Push Docker'
             script {
-            dir('../test'){
+            dir('../CodeUnicon'){
             docker.withRegistry('', registryCredential) {
                     sh "docker push xhfkd00/codeunicorn:1.0"
                 }

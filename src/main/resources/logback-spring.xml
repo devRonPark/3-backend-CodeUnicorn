@@ -7,7 +7,7 @@
     </springProfile>
     <springProfile name="dev">
         <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
-        <property name="LOG_FILE_PATH" value="logs/dev"/>
+        <property name="LOG_FILE_PATH" value="/home/ubuntu/codeUnicorn_log/dev"/>
         <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
         <property name="LOG_FILE_NAME" value="dev_log"/>
         <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->
@@ -17,13 +17,13 @@
     </springProfile>
     <springProfile name="prod">
         <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
-        <property name="LOG_FILE_PATH" value="logs/prod"/>
+        <property name="LOG_FILE_PATH" value="/home/ubuntu/codeUnicorn_log/prod"/>
         <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
         <property name="LOG_FILE_NAME" value="prod_log"/>
         <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->
         <property name="ERR_LOG_FILE_NAME" value="prod_error_log"/>
         <!-- 로그 레벨 지정 -->
-        <property name="LOG_LEVEL" value="WARN"/>
+        <property name="LOG_LEVEL" value="INFO"/>
     </springProfile>
 
     <property name="LOG_PATTERN_HIGHLIGHTED"
@@ -33,20 +33,20 @@
 
     <!-- CONSOLE 어펜더 정의 -->
     <!-- 로컬 개발 환경에 적합 -->
-    <springProfile name="local">
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-                <pattern>${LOG_PATTERN_HIGHLIGHTED}</pattern>
-            </encoder>
-        </appender>
-    </springProfile>
+    <!--    <springProfile name="local">-->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${LOG_PATTERN_HIGHLIGHTED}</pattern>
+        </encoder>
+    </appender>
+    <!--    </springProfile>-->
 
 
     <!-- FILE 어펜더 정의 -->
     <!-- 운영 환경에 적합 -->
     <!-- 일자별로 로그 파일을 적재하되, 100MB를 초과하면 로그 파일 분할 -->
     <!-- 최대 7일치를 보관하고 나머지는 삭제, 최대 1GB를 초과해도 나머지를 삭제 -->
-    <if condition='!"${spring.profiles.active}".contains("dev")'>
+    <if condition='!"${spring.profiles.active}".contains("local")'>
         <then>
             <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <!-- INFO 레벨 이상의 로그만 저장 -->
@@ -60,7 +60,7 @@
                 <!-- 일자별로 로그파일 적용 -->
                 <rollingPolicy
                     class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                    <fileNamePattern>${LOG_FILE_PATH}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+                    <fileNamePattern>${LOG_FILE_PATH}/${LOG_FILE_NAME}_%d{yyyy-MM-dd}_%i.log</fileNamePattern>
                     <!-- 로그파일의 크기가 너무 커지는 것을 방지하기 위한 옵션 -->
                     <!-- 100MB를 초과하면 로그 파일 분할 -->
                     <timeBasedFileNamingAndTriggeringPolicy
@@ -89,7 +89,7 @@
                 </encoder>
                 <rollingPolicy
                     class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                    <fileNamePattern>${LOG_FILE_PATH}/${ERR_LOG_FILE_NAME}.%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+                    <fileNamePattern>${LOG_FILE_PATH}/${ERR_LOG_FILE_NAME}_%d{yyyy-MM-dd}_%i.log</fileNamePattern>
                     <timeBasedFileNamingAndTriggeringPolicy
                         class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                         <maxFileSize>100MB</maxFileSize>
@@ -106,7 +106,7 @@
         <springProfile name="local">
             <appender-ref ref="CONSOLE"/>
         </springProfile>
-        <if condition='!"${spring.profiles.active}".contains("dev")'>
+        <if condition='!"${spring.profiles.active}".contains("local")'>
             <then>
                 <appender-ref ref="FILE"/>
                 <appender-ref ref="ERROR_FILE"/>
