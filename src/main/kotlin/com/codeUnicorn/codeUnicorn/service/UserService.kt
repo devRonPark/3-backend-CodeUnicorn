@@ -88,7 +88,7 @@ class UserService {
 
             returnData["type"] = "로그인"
         }
-
+        returnData["user"] = user
         // 세션 발급
         // 세션이 존재하지 않는 경우 신규 세션 발급
         val session: HttpSession = request.getSession(true)

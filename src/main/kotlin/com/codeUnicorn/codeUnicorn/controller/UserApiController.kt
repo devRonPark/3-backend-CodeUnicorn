@@ -72,11 +72,18 @@ class UserApiController { // 의존성 주입
     ): ResponseEntity<SuccessResponse> {
         // 각각 회원가입 || 로그인, 사용자 데이터 리턴
         val result: MutableMap<String, Any> = userService.login(requestUserDto, request, response)
+        val user: User = result["user"] as User
+        // 응답해 줄 userInfo 데이터 가공
+        val userInfo: MutableMap<String, String?> = mutableMapOf<String, String?>()
+        userInfo["id"] = user.id.toString()
+        userInfo["nickname"] = user.nickname
+        userInfo["profilePath"] = user.profilePath
+        val successResponse = SuccessResponse(200, userInfo)
 
         if (result["type"] == "회원가입") {
-            return ResponseEntity.status(HttpStatus.CREATED).build()
+            return ResponseEntity.status(HttpStatus.CREATED).body(successResponse)
         }
-        return ResponseEntity.status(HttpStatus.OK).build()
+        return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
 
     // 사용자 로그아웃 API
