@@ -29,7 +29,7 @@ class CourseService {
     }
 
     fun getCourseCount(category: String): Int {
-        var courseCount: Int = 0
+        var courseCount = 0
 
         if (category == "전체") {
             courseCount = courseRepository.findByAllCourseCount()

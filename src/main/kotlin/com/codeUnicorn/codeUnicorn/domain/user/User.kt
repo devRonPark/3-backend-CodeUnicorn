@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
-import org.hibernate.annotations.CreationTimestamp
 import java.time.LocalDateTime
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -18,13 +17,14 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.OneToMany
 import javax.persistence.Table
+import org.hibernate.annotations.CreationTimestamp
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity
 @Table(name = "user") // 엔티티와 매핑할 테이블 지정
 data class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int = 0,
+    val id: Int? = null,
     var email: String = "",
     var nickname: String? = null, // 네이버 닉네임 규칙 : 한글 1~10자 / 영문 대소문자 2~20자 ,구글 닉네임 규칙 : 6~30자 길이
     @Column(name = "platform_type")

@@ -98,22 +98,22 @@ class UserService {
         session.setAttribute("user", userInfoForSession)
 
         // 로그인 사용자의 브라우저 정보 및 IP 주소 정보 수집
-        val browserName: String = this.getBrowserInfo(request)
-        val ip: String = this.getClientIp(request) // IPv4 형식의 주소
+//        val browserName: String = this.getBrowserInfo(request)
+//        val ip: String = this.getClientIp(request) // IPv4 형식의 주소
 
         // 로그인 로그 쌓기
-        val userAccessLog =
-            UserAccessLogDto(
-                userInfoInDb?.id ?: 0,
-                BEHAVIOR_TYPE.LOGIN.toString(),
-                ip,
-                browserName,
-                session.id
-            )
-
-        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
-
-        userAccessLogRepository.save(userAccessLogEntity)
+//        val userAccessLog =
+//            UserAccessLogDto(
+//                userInfoInDb?.id ?: 0,
+//                BEHAVIOR_TYPE.LOGIN.toString(),
+//                ip,
+//                browserName,
+//                session.id
+//            )
+//
+//        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
+//
+//        userAccessLogRepository.save(userAccessLogEntity)
 
         return returnData
     }
@@ -132,17 +132,19 @@ class UserService {
         // 세션 테이블에 저장된 세션 데이터 삭제됨.
         session.invalidate()
 
-        // 로그아웃 로그 저장
-        val userAccessLog =
-            UserAccessLogDto(
-                userInfoInSession.id,
-                BEHAVIOR_TYPE.LOGIN.toString(),
-                userInfoInSession.ip,
-                userInfoInSession.browserType,
-                session.id
-            )
-        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
-        userAccessLogRepository.save(userAccessLogEntity)
+        if (userInfoInSession.id != null) {
+            // 로그아웃 로그 저장
+            val userAccessLog =
+                UserAccessLogDto(
+                    userInfoInSession.id ?: 0,
+                    BEHAVIOR_TYPE.LOGIN.toString(),
+                    userInfoInSession.ip,
+                    userInfoInSession.browserType,
+                    session.id
+                )
+            val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
+            userAccessLogRepository.save(userAccessLogEntity)
+        }
     }
 
     // 클라이언트 브라우저 정보 가져오기
