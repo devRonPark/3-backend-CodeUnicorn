@@ -14,6 +14,7 @@ import com.codeUnicorn.codeUnicorn.exception.NicknameAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import mu.KotlinLogging
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
@@ -21,6 +22,8 @@ import javax.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class UserService {
@@ -128,9 +131,13 @@ class UserService {
         // 세션 속 저장되어 있는 사용자 정보 가져오기
         val userInfoInSession: User =
             jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
-
+        log.info { "userInfoInSession: $userInfoInSession" }
         // 세션 테이블에 저장된 세션 데이터 삭제됨.
         session.invalidate()
+
+        // 로그아웃 사용자의 브라우저 정보 및 IP 주소 정보 수집
+        val browserName: String = this.getBrowserInfo(request)
+        val ip: String = this.getClientIp(request) // IPv4 형식의 주소
 
         if (userInfoInSession.id != null) {
             // 로그아웃 로그 저장
@@ -138,8 +145,8 @@ class UserService {
                 UserAccessLogDto(
                     userInfoInSession.id ?: 0,
                     BEHAVIOR_TYPE.LOGIN.toString(),
-                    userInfoInSession.ip,
-                    userInfoInSession.browserType,
+                    ip,
+                    browserName,
                     session.id
                 )
             val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()

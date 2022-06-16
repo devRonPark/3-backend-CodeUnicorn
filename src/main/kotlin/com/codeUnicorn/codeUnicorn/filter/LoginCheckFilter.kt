@@ -28,7 +28,7 @@ class LoginCheckFilter : Filter {
         Regex("/courses/(\\w|\\d|\\s)*"),
         Regex("/courses/(\\w|\\d|\\s)*/lectures/(\\w|\\d|\\s)*"),
         Regex("^/users/[(\\w|\\d|\\s)*|^(login|logout)]"),
-        Regex("^/users/(\\w|\\d|\\s)*/(nickname|profile|courses)$")
+        Regex("^/users/(\\w|\\d|\\s)*/(info|courses)$")
     )
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
