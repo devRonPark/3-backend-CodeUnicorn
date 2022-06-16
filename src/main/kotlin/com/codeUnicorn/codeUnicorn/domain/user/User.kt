@@ -58,6 +58,7 @@ data class User(
     @JsonSerialize(using = LocalDateTimeSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     var deletedAt: LocalDateTime? = null,
+    @JsonIgnore
     @OneToMany(mappedBy = "userId", fetch = FetchType.LAZY) // User:UserAccessLog = 1:N 관계 설정
     val userAccessLog: List<UserAccessLog>? = null
 )

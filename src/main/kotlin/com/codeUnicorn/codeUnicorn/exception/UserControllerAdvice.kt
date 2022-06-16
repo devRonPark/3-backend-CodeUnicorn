@@ -187,4 +187,21 @@ class UserControllerAdvice {
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse)
     }
+
+    // 지원하지 않는 콘텐츠 형식
+    @ExceptionHandler(value = [NotSupportedContentTypeException::class])
+    fun handleNotSupportedContentTypeException(
+        e: NotSupportedContentTypeException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // Error Response
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.UNSUPPORTED_MEDIA_TYPE.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+        }
+        // ResponseEntity
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorResponse)
+    }
 }
