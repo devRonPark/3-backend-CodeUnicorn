@@ -22,15 +22,14 @@ data class RequestUserDto(
 )
 
 data class UpdateNicknameUserDto(
-    @NotBlank(message = "닉네임이 누락되었습니다.")
     @Size(
         min = 1,
         max = 60,
         message = "닉네임은 1 ~ 60자 이어야 합니다.",
     )
-    private val nickname: String
+    private val nickname: String?
 ) {
-    fun getNickname(): String {
+    fun getNickname(): String? {
         return nickname
     }
 }

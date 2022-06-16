@@ -1,12 +1,10 @@
 package com.codeUnicorn.codeUnicorn.controller
 
-import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
 import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UpdateNicknameUserDto
-import com.codeUnicorn.codeUnicorn.exception.FileNotExistException
 import com.codeUnicorn.codeUnicorn.service.S3FileUploadService
 import com.codeUnicorn.codeUnicorn.service.UserService
 import java.time.LocalDateTime
@@ -114,36 +112,30 @@ class UserApiController { // 의존성 주입
         return ResponseEntity.status(HttpStatus.OK).body(session)
     }
 
-    // 사용자 닉네임 업데이트
-    @PatchMapping("/{userId}/nickname")
-    fun updateNickname(
-        request: HttpServletRequest,
+    // 사용자 닉네임 및 프로필 업데이트
+    @PatchMapping("/{userId}/info")
+    fun updateUserInfo(
         @PathVariable(value = "userId")
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "userId는 숫자만 가능합니다.")
-        userId: String?,
+        userId: String,
         @Valid
-        @RequestBody
-        updateNicknameUserDto: UpdateNicknameUserDto
-    ): ResponseEntity<Any> {
-        userService.updateNickname(Integer.parseInt(userId), updateNicknameUserDto.getNickname())
-
-        // 204 응답
-        return ResponseEntity.noContent().build()
-    }
-
-    // 사용자 프로필 설정
-    @PatchMapping("/{userId}/profile")
-    fun updateUserProfile(
-        @PathVariable(value = "userId")
-        @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "userId는 숫자만 가능합니다.")
-        userId: String?,
+        @RequestParam("nickname")
+        updateNicknameUserDto: UpdateNicknameUserDto?,
         @RequestParam("image")
         file: MultipartFile?
     ): ResponseEntity<Any> {
-        // S3 스토리지에 사용자 프로필 이미지 업로드
-        val profilePath = if (file != null) s3FileUploadService.uploadFile(file) else throw FileNotExistException(ExceptionMessage.FILE_NOT_EXIST)
-        // 사용자 테이블에 프로필 경로 정보 업데이트
-        userService.updateUserProfile(Integer.parseInt(userId), profilePath)
+        log.info { "nickname: $updateNicknameUserDto" }
+        // request.body 데이터로 nickname 데이터가 들어올 수도 안 들어올 수도 있다.
+        if (updateNicknameUserDto?.getNickname() != null) {
+            // 닉네임 업데이트
+            userService.updateNickname(Integer.parseInt(userId), updateNicknameUserDto.getNickname() ?: "")
+        }
+        if (file != null) {
+            // S3 스토리지에 사용자 프로필 이미지 업로드
+            val profilePath = s3FileUploadService.uploadFile(file)
+            // 사용자 테이블에 프로필 경로 정보 업데이트
+            userService.updateUserProfile(Integer.parseInt(userId), profilePath)
+        }
         return ResponseEntity.noContent().build()
     }
 }

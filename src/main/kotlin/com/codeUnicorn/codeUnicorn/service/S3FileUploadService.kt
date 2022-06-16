@@ -8,18 +8,17 @@ import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.domain.file.FileUploadLog
 import com.codeUnicorn.codeUnicorn.domain.file.FileUploadLogRepository
 import com.codeUnicorn.codeUnicorn.dto.FileUploadLogDto
-import com.codeUnicorn.codeUnicorn.exception.FileNotExistException
 import com.codeUnicorn.codeUnicorn.exception.FileNotSupportedException
 import com.codeUnicorn.codeUnicorn.exception.FileUploadFailException
+import java.io.IOException
+import java.io.InputStream
+import java.util.UUID
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
-import java.io.IOException
-import java.io.InputStream
-import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -36,9 +35,6 @@ class S3FileUploadService {
 
     @Throws(RuntimeException::class)
     fun uploadFile(file: MultipartFile): String {
-        log.info { "file: $file" }
-        // 파일 존재 여부 검증
-        validateFileExist(file)
         // 파일 형식 검증
         val contentType: String = file.contentType ?: ""
         validateFileSupportedContentType(contentType)
@@ -68,14 +64,13 @@ class S3FileUploadService {
                     objectMetadata
                 ).withCannedAcl(CannedAccessControlList.PublicRead)
             )
-            log.info { "objectResult: $objectResult" }
         } catch (e: IOException) {
             throw FileUploadFailException(ExceptionMessage.FILE_UPLOAD_FAIL)
         }
 
         val originalFilename: String = uploadFile.originalFilename ?: ""
         val type: String = StringUtils.getFilenameExtension(originalFilename) ?: ""
-        val directoryPath: String = amazonS3Client.getUrl(bucket, "$fileName.$type").toString()
+        val directoryPath: String = amazonS3Client.getUrl(bucket, "images/$fileName").toString()
         val size: Int = uploadFile.size.toInt()
 
         // 파일 정보 로그 테이블에 파일 정보 저장
@@ -88,19 +83,9 @@ class S3FileUploadService {
         return directoryPath
     }
 
-    // 파일 존재 여부 검증
-    @Throws(FileNotExistException::class)
-    fun validateFileExist(file: MultipartFile) {
-        if (file.isEmpty) {
-            throw FileNotExistException(ExceptionMessage.FILE_NOT_EXIST)
-        }
-    }
-
     // 파일 형식 지원 여부 검증
     @Throws(FileNotSupportedException::class)
     fun validateFileSupportedContentType(contentType: String) {
-        log.info { "contentType: $contentType" }
-        log.info { !(contentType.contains("jpg")) && !(contentType.contains("jpeg")) && !(contentType.contains("png")) }
         if (!(contentType.contains("jpg")) && !(contentType.contains("jpeg")) && !(contentType.contains("png"))) {
             throw FileNotSupportedException(ExceptionMessage.FILE_NOT_SUPPORTED)
         }
