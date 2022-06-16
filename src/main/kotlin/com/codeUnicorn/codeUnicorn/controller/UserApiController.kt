@@ -50,12 +50,7 @@ class UserApiController { // 의존성 주입
         userId: String
     ): ResponseEntity<Any> {
         val user: User = userService.getUserInfo(Integer.parseInt(userId))
-        // 응답해 줄 userInfo 데이터 가공
-        val userInfo: MutableMap<String, Any?> = mutableMapOf<String, Any?>()
-        userInfo["id"] = user.id.toString()
-        userInfo["nickname"] = user.nickname
-        userInfo["profilePath"] = user.profilePath
-        val successResponse = SuccessResponse(200, userInfo)
+        val successResponse = SuccessResponse(200, user)
 
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
@@ -124,7 +119,6 @@ class UserApiController { // 의존성 주입
         @RequestParam("image")
         file: MultipartFile?
     ): ResponseEntity<Any> {
-        log.info { "nickname: $updateNicknameUserDto" }
         // request.body 데이터로 nickname 데이터가 들어올 수도 안 들어올 수도 있다.
         if (updateNicknameUserDto?.getNickname() != null) {
             // 닉네임 업데이트
@@ -136,6 +130,9 @@ class UserApiController { // 의존성 주입
             // 사용자 테이블에 프로필 경로 정보 업데이트
             userService.updateUserProfile(Integer.parseInt(userId), profilePath)
         }
-        return ResponseEntity.noContent().build()
+        val user: User = userService.getUserInfo(Integer.parseInt(userId))
+        val successResponse = SuccessResponse(200, user)
+
+        return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
 }
