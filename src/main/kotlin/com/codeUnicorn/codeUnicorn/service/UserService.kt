@@ -98,22 +98,22 @@ class UserService {
         session.setAttribute("user", userInfoForSession)
 
         // 로그인 사용자의 브라우저 정보 및 IP 주소 정보 수집
-//        val browserName: String = this.getBrowserInfo(request)
-//        val ip: String = this.getClientIp(request) // IPv4 형식의 주소
+        val browserName: String = this.getBrowserInfo(request)
+        val ip: String = this.getClientIp(request) // IPv4 형식의 주소
 
         // 로그인 로그 쌓기
-//        val userAccessLog =
-//            UserAccessLogDto(
-//                userInfoInDb?.id ?: 0,
-//                BEHAVIOR_TYPE.LOGIN.toString(),
-//                ip,
-//                browserName,
-//                session.id
-//            )
-//
-//        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
-//
-//        userAccessLogRepository.save(userAccessLogEntity)
+        val userAccessLog =
+            UserAccessLogDto(
+                user.id ?: 0,
+                BEHAVIOR_TYPE.LOGIN.toString(),
+                ip,
+                browserName,
+                session.id
+            )
+
+        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
+
+        userAccessLogRepository.save(userAccessLogEntity)
 
         return returnData
     }

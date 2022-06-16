@@ -53,7 +53,7 @@ class UserApiController { // 의존성 주입
     ): ResponseEntity<Any> {
         val user: User = userService.getUserInfo(Integer.parseInt(userId))
         // 응답해 줄 userInfo 데이터 가공
-        val userInfo: MutableMap<String, String?> = mutableMapOf<String, String?>()
+        val userInfo: MutableMap<String, Any?> = mutableMapOf<String, Any?>()
         userInfo["id"] = user.id.toString()
         userInfo["nickname"] = user.nickname
         userInfo["profilePath"] = user.profilePath
@@ -74,8 +74,8 @@ class UserApiController { // 의존성 주입
         val result: MutableMap<String, Any> = userService.login(requestUserDto, request, response)
         val user: User = result["user"] as User
         // 응답해 줄 userInfo 데이터 가공
-        val userInfo: MutableMap<String, String?> = mutableMapOf<String, String?>()
-        userInfo["id"] = user.id.toString()
+        val userInfo: MutableMap<String, Any?> = mutableMapOf<String, Any?>()
+        userInfo["id"] = user.id
         userInfo["nickname"] = user.nickname
         userInfo["profilePath"] = user.profilePath
         val successResponse = SuccessResponse(200, userInfo)
@@ -100,7 +100,7 @@ class UserApiController { // 의존성 주입
         // 세션 정보 존재하지 않은 경우 예외 처리
         if (session == null) {
             val errorResponse = ErrorResponse().apply {
-                this.status = HttpStatus.NOT_FOUND.value().toString()
+                this.status = HttpStatus.NOT_FOUND.value()
                 this.message = "세션 정보가 존재하지 않습니다."
                 this.method = request.method
                 this.path = request.requestURI.toString()

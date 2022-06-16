@@ -11,10 +11,10 @@ import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
-import javax.persistence.JoinColumn
 import javax.persistence.OneToMany
 import javax.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
@@ -49,7 +49,6 @@ data class User(
     @JsonSerialize(using = LocalDateTimeSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     var deletedAt: LocalDateTime? = null,
-    @OneToMany // User:UserAccessLog = 1:N 관계 설정
-    @JoinColumn(name = "user_id") // UserAccessLog의 user_id 컬럼을 FK로 설정
-    val userAccessLog: Set<UserAccessLog>? = null
+    @OneToMany(mappedBy = "userId", fetch = FetchType.LAZY) // User:UserAccessLog = 1:N 관계 설정
+    val userAccessLog: List<UserAccessLog>? = null
 )

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import java.time.LocalDateTime
 
 data class ErrorResponse(
-    var status: String = "",
+    var status: Int = 0,
     var message: String = "",
     var method: String = "",
     var path: String = "",

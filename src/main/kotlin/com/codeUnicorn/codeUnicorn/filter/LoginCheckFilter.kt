@@ -75,7 +75,7 @@ class LoginCheckFilter : Filter {
             httpResponse.characterEncoding = "UTF-8"
             // ErrorResponse
             val errorResponse = ErrorResponse().apply {
-                this.status = HttpStatus.UNAUTHORIZED.value().toString()
+                this.status = HttpStatus.UNAUTHORIZED.value()
                 this.message = e.message.toString()
                 this.method = request.method
                 this.path = request.requestURI.toString()
@@ -87,7 +87,7 @@ class LoginCheckFilter : Filter {
             httpResponse.characterEncoding = "UTF-8"
             // ErrorResponse
             val errorResponse = ErrorResponse().apply {
-                this.status = HttpStatus.FORBIDDEN.value().toString()
+                this.status = HttpStatus.FORBIDDEN.value()
                 this.message = e.message.toString()
                 this.method = request.method
                 this.path = request.requestURI.toString()
