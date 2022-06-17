@@ -6,6 +6,7 @@ import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UpdateNicknameUserDto
+import com.codeUnicorn.codeUnicorn.exception.NicknameOrProfileRequiredException
 import com.codeUnicorn.codeUnicorn.exception.NotSupportedContentTypeException
 import com.codeUnicorn.codeUnicorn.service.S3FileUploadService
 import com.codeUnicorn.codeUnicorn.service.UserService
@@ -125,8 +126,8 @@ class UserApiController { // 의존성 주입
         @RequestParam("image")
         file: MultipartFile?
     ): ResponseEntity<Any> {
-        if (request.contentType != "multipart/form-data") {
-            throw NotSupportedContentTypeException(ExceptionMessage.CONTENT_TYPE_NOT_SUPPORTED)
+        if (updateNicknameUserDto?.getNickname() == null && file != null && file.isEmpty) {
+            throw NicknameOrProfileRequiredException(ExceptionMessage.NICKNAME_OR_PROFILE_REQUIRED)
         }
         // request.body 데이터로 nickname 데이터가 들어올 수도 안 들어올 수도 있다.
         if (updateNicknameUserDto?.getNickname() != null) {

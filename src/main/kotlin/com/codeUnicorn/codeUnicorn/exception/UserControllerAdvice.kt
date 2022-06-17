@@ -204,4 +204,21 @@ class UserControllerAdvice {
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorResponse)
     }
+
+    // 파일 업로드 용량 초과 시 발생
+    @ExceptionHandler(value = [NicknameOrProfileRequiredException::class])
+    fun handleNicknameOrProfileRequiredException(
+        e: NicknameOrProfileRequiredException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.BAD_REQUEST.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+        }
+        // ResponseEntity
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+    }
 }

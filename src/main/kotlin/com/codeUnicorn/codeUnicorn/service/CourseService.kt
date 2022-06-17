@@ -32,14 +32,21 @@ class CourseService {
 
     // 코스 정보 조회
     fun getCourseList(category: String, paging: Int): List<CourseInfo>? {
-
+        val categoryList = mapOf(
+            "frontend" to "프론트엔드",
+            "backend" to "백엔드",
+            "mobile" to "모바일",
+            "language" to "프로그래밍 언어",
+            "algorithm" to "알고리즘",
+            "database" to "데이터베이스"
+        )
         var courseInfoInDb: List<CourseInfo>? = null
         var courseCount: Int = 0
 
         if (category == "all") {
             courseInfoInDb = courseRepository.findByAllCourse(paging) ?: return null
         } else {
-            courseInfoInDb = courseRepository.findByCourse(category, paging) ?: return null
+            courseInfoInDb = courseRepository.findByCourse(categoryList[category] ?: "", paging) ?: return null
         }
 
         return courseInfoInDb

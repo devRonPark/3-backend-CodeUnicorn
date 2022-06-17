@@ -1,7 +1,6 @@
 package com.codeUnicorn.codeUnicorn.constant
 
 object ExceptionMessage {
-    const val FILE_NOT_EXIST = "파일이 존재하지 않습니다."
     const val FILE_NOT_SUPPORTED = "지원하지 않는 파일 형식입니다."
     const val FILE_MAX_SIZE_EXCEEDED = "파일의 최대 업로드 용량은 10MB입니다."
     const val FILE_UPLOAD_FAIL = "파일 업로드에 실패했습니다."
@@ -11,4 +10,5 @@ object ExceptionMessage {
     const val SESSION_NOT_EXIST = "세션이 존재하지 않습니다."
     const val NICKNAME_ALREADY_EXIST = "이미 존재하는 닉네임입니다."
     const val CONTENT_TYPE_NOT_SUPPORTED = "지원하지 않는 콘텐츠 형식입니다."
+    const val NICKNAME_OR_PROFILE_REQUIRED = "수정할 닉네임이나 프로필 이미지가 누락되었습니다."
 }
