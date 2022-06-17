@@ -36,7 +36,7 @@ class CourseService {
         var courseInfoInDb: List<CourseInfo>? = null
         var courseCount: Int = 0
 
-        if (category == "전체") {
+        if (category == "all") {
             courseInfoInDb = courseRepository.findByAllCourse(paging) ?: return null
         } else {
             courseInfoInDb = courseRepository.findByCourse(category, paging) ?: return null
@@ -49,7 +49,7 @@ class CourseService {
     fun getCourseCount(category: String): Int {
         var courseCount = 0
 
-        if (category == "전체") {
+        if (category == "all") {
             courseCount = courseRepository.findByAllCourseCount()
         } else {
             courseCount = courseRepository.findByCourseCount(category)
