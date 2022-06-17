@@ -1,5 +1,6 @@
 package com.codeUnicorn.codeUnicorn.domain.course
 
+import com.codeUnicorn.codeUnicorn.domain.instructor.Instructor
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
@@ -10,6 +11,7 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Entity
@@ -35,7 +37,7 @@ data class Course(
     var viewCount: Int? = 0,
     @Column(name = "total_hours")
     var totalHours: Int? = 0,
-    @Column(name = "lecture_count")
+    // @Column(name = "lecture_count")
     var lectureCount: Int? = 0,
     @Column(name = "average_ratings")
     var averageRatings: Int? = 0,
@@ -59,6 +61,7 @@ data class CourseInfo(
     var category: String,
     var type: Int,
     var name: String,
+    var description: String,
     @Column(name = "image_path")
     var imagePath: String?,
     @Column(name = "average_ratings")
@@ -67,4 +70,30 @@ data class CourseInfo(
     var ratingsCount: Int,
     @Column(name = "user_count")
     var userCount: Int?
+)
+
+@Entity
+@Table(name = "course")
+data class CourseDetail(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int,
+    var category: String,
+    var type: Int,
+    var name: String,
+    var description: String,
+    var price: Int?,
+    @Column(name = "discount_rate")
+    var discountRate: Int? = 0,
+    @Column(name = "image_path")
+    var imagePath: String?,
+    @Column(name = "average_ratings")
+    var averageRatings: Int?,
+    @Column(name = "ratings_count")
+    var ratingsCount: Int,
+    @Column(name = "user_count")
+    var userCount: Int?,
+
+    @ManyToOne
+    val instructor: Instructor
+
 )

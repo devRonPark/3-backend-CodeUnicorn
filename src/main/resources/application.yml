@@ -38,3 +38,15 @@ logging:
                 descriptor:
                     sql:
                         BasicBinder: TRACE # SQL 문에 바인딩된 파라미터 값을 로그로 출력하기 위한 설정.
+cloud:
+    aws:
+        credentials:
+            accessKey: AKIAYZSNITCOEMFMLYB4  # 엑세스 키 ID (AWS S3에서 발급 받은 키)
+            secretKey: LjsCVugB1mTGQSp4EU2XxcnMuYOeH3IjkRWVFHPf  # 비밀 엑세스 키 ID (AWS S3에서 발급 받은 키)
+        s3:
+            bucket: code-unicorn-service # 버킷이름 (자신이 설정한 버킷이름)
+            dir: images
+        region:
+            static: ap-northeast-2 # 버킷 지역(서울은 ap-northeast-2)
+        stack:
+            auto: false

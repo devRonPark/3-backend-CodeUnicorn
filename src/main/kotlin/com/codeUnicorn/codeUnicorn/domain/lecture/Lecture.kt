@@ -1,27 +1,49 @@
 package com.codeUnicorn.codeUnicorn.domain.lecture
 
-import javax.persistence.Column
+import com.codeUnicorn.codeUnicorn.domain.course.PlayTimeConverter
+import com.codeUnicorn.codeUnicorn.domain.section.SectionDetailInfo
+import javax.persistence.AttributeConverter
+import javax.persistence.Convert
+import javax.persistence.Converter
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Entity
-@Table(name = "instructor")
-data class Lecture(
+@Table(name = "lecture")
+@Convert(converter = PlayTimeConverter::class, attributeName = "playTime")
+data class LectureDetailInfo(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int? = null,
-    @Column(name = "course_id")
-    val courseId: Int,
-    @Column(name = "section_id")
-    val sectionId: Int,
-    @Column(length = 30)
     var name: String,
-    @Column(length = 50)
     var description: String,
-    @Column(length = 255, name = "video_url")
+    // @Column(length = 255, name = "video_url")
     var videoUrl: String,
-    @Column(name = "play_time")
-    var playTime: Int
+    // @Column(name = "play_time")
+    var playTime: String,
+
+    @ManyToOne
+    val section: SectionDetailInfo
 )
+
+@Converter
+class PlayTimeConverter : AttributeConverter<String, Int> {
+    override fun convertToDatabaseColumn(attribute: String): Int {
+        return attribute.toInt()
+    }
+
+    override fun convertToEntityAttribute(dbData: Int): String {
+        val hours: Int = dbData / 3600
+        // hours 가 10보다 작으면 "0$hours" : "$hours"
+        val hoursToString: String = if (hours < 10) "0$hours" else "$hours"
+        val minutes = (dbData % 3600) / 60
+        // minutes 가 10보다 작으면 "0$minutes" : "$minutes"
+        val minutesToString: String = if (minutes < 10) "0$minutes" else "$minutes"
+        val seconds = (dbData % 3600) % 60
+        val secondsToString: String = if (seconds < 10) "0$seconds" else "$seconds"
+        return "$hoursToString:$minutesToString:$secondsToString"
+    }
+}

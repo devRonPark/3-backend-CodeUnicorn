@@ -17,5 +17,5 @@ data class Instructor(
     @Column(length = 255)
     var introduction: String,
     @Column(length = 255, name = "profile_path")
-    var profilePath: String
+    var profilePath: String,
 )

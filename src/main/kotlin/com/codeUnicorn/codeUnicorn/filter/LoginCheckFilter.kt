@@ -6,40 +6,37 @@ import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.exception.UserAccessForbiddenException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import mu.KotlinLogging
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
+import org.springframework.util.PatternMatchUtils
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import mu.KotlinLogging
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.stereotype.Component
 
 private val log = KotlinLogging.logger {}
 
 @Component
 class LoginCheckFilter : Filter {
-    // 인증이 필요한 요청 Url 정규표현식 목록
-    // POST /courses/{courseId} GET /courses/{courseId}/lectures/{lectureId}
-    // GET /users/{userId}, PATCH /users/{userId}/nickname, PATCH /users/{userId}/profile, GET /users/{userId}/courses
-    private val authList: Array<Regex> = arrayOf(
-        Regex("/courses/(\\w|\\d|\\s)*"),
-        Regex("/courses/(\\w|\\d|\\s)*/lectures/(\\w|\\d|\\s)*"),
-        Regex("^/users/[(\\w|\\d|\\s)*|^(login|logout)]"),
-        Regex("^/users/(\\w|\\d|\\s)*/(info|courses)$")
+    // 인증과 무관하게 항상 접근을 허용하는 요청 Url
+    private val whitelist: Array<String> = arrayOf(
+        "/", "/users/login",
+        "/users/logout", "/courses/*",
+        "/static/*"
     )
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         val httpRequest: HttpServletRequest = request as HttpServletRequest
         val requestURI = httpRequest.requestURI
-        val requestMethod = httpRequest.method
         val httpResponse: HttpServletResponse = response as HttpServletResponse
 
         try {
             log.info("인증 체크 필터 시작 {}", requestURI)
-            if (isLoginCheckPath(requestURI, requestMethod)) {
+            if (isLoginCheckPath(requestURI)) {
                 log.info("인증 체크 로직 실행 {}", requestURI)
                 // 로그인 세션이 존재하면 세션 반환, 세션이 존재하지 않으면 null 값 반환
                 val session = httpRequest.getSession(false)
@@ -96,16 +93,8 @@ class LoginCheckFilter : Filter {
         }
     }
 
-    // 사용자 인증이 필요한 경로인지 체크
-    private fun isLoginCheckPath(requestURI: String, requestMethod: String): Boolean {
-        var isAuthNeed = false
-        authList.forEach { regex ->
-            if (regex.matches(requestURI)) {
-                isAuthNeed = true
-            }
-        }
-        // GET /courses/{courseId} 인 경우 인증 필요하지 않음.
-        if (requestURI.matches(Regex("^/courses/(\\w|\\d|\\s)*/?")) && requestMethod == "GET") isAuthNeed = false
-        return isAuthNeed
+    // 화이트 리스트의 경우 인증 체크 x
+    private fun isLoginCheckPath(requestURI: String): Boolean {
+        return !PatternMatchUtils.simpleMatch(whitelist, requestURI)
     }
 }
