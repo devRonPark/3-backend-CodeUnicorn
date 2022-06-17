@@ -7,7 +7,7 @@
     </springProfile>
     <springProfile name="dev">
         <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
-        <property name="LOG_FILE_PATH" value="/home/ubuntu/codeUnicorn_log/dev"/>
+        <property name="LOG_FILE_PATH" value="/var/jenkins_home/codeUnicorn_log/dev"/>
         <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
         <property name="LOG_FILE_NAME" value="dev_log"/>
         <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->
@@ -17,7 +17,7 @@
     </springProfile>
     <springProfile name="prod">
         <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
-        <property name="LOG_FILE_PATH" value="/home/ubuntu/codeUnicorn_log/prod"/>
+        <property name="LOG_FILE_PATH" value="/var/jenkins_home/codeUnicorn_log/prod"/>
         <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
         <property name="LOG_FILE_NAME" value="prod_log"/>
         <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->

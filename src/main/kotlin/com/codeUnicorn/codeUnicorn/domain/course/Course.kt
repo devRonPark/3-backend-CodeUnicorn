@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import java.time.LocalDateTime
 import javax.persistence.Column
+import javax.persistence.Convert
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -74,6 +75,7 @@ data class CourseInfo(
 
 @Entity
 @Table(name = "course")
+@Convert(converter = PlayTimeConverter::class, attributeName = "totalHours")
 data class CourseDetail(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int,
@@ -92,6 +94,8 @@ data class CourseDetail(
     var ratingsCount: Int,
     @Column(name = "user_count")
     var userCount: Int?,
+    @Column(name = "total_hours")
+    var totalHours: String,
 
     @ManyToOne
     val instructor: Instructor
