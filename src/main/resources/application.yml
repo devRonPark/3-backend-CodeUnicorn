@@ -27,10 +27,6 @@ spring:
         store-type: jdbc
         jdbc:
             initialize-schema: always
-        cookie:
-            same-site: strict
-            http-only: true
-            secure: true
 logging:
     org:
         hibernate:

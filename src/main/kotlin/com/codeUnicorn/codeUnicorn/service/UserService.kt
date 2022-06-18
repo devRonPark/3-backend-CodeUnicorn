@@ -14,11 +14,12 @@ import com.codeUnicorn.codeUnicorn.exception.NicknameAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
+import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 import javax.transaction.Transactional
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -99,6 +100,16 @@ class UserService {
         val userInfoForSession = jacksonObjectMapper().writeValueAsString(user)
         // 세션에 로그인 회원 정보 보관
         session.setAttribute("user", userInfoForSession)
+
+        // create a cookie
+        val cookie = Cookie("loginSessionId", session.id)
+        cookie.maxAge = 1 * 24 * 60 * 60 // expires in 1 days
+        cookie.secure = false
+        cookie.isHttpOnly = true
+        cookie.domain = "codeunicorn.kr"
+        cookie.path = "/"; // global cookie accessible every where
+        // add cookie to response
+        response.addCookie(cookie)
 
         // 로그인 사용자의 브라우저 정보 및 IP 주소 정보 수집
         val browserName: String = this.getBrowserInfo(request)
