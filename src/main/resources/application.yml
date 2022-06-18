@@ -28,8 +28,9 @@ spring:
         jdbc:
             initialize-schema: always
         cookie:
-            http-only: false
-            secure: false
+            same-site: strict
+            http-only: true
+            secure: true
 logging:
     org:
         hibernate:
