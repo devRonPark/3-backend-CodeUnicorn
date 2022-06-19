@@ -41,7 +41,6 @@ class CourseService {
             "database" to "데이터베이스"
         )
         var courseInfoInDb: List<CourseInfo>?
-        var courseCount: Int = 0
 
         if (category == "all") {
             courseInfoInDb = courseRepository.findByAllCourse(paging)

@@ -9,6 +9,7 @@ server:
                 path: /
                 secure: true
                 http-only: true
+                same-site: none
 spring:
     application:
         name: CODE_UNICORN
@@ -34,11 +35,6 @@ spring:
         store-type: jdbc
         jdbc:
             initialize-schema: always
-        cookie:
-            domain: codeunicorn.kr
-            path: /
-            secure: true
-            http-only: true
 logging:
     org:
         hibernate:

@@ -56,7 +56,7 @@ class S3FileUploadService {
         val inputStream: InputStream = uploadFile.inputStream
 
         try {
-            val objectResult = amazonS3Client.putObject(
+            amazonS3Client.putObject(
                 PutObjectRequest(
                     bucket,
                     "images/$fileName",
