@@ -27,6 +27,10 @@ spring:
         store-type: jdbc
         jdbc:
             initialize-schema: always
+        cookie:
+            domain: codeunicorn.kr
+            secure: true
+            http-only: true
 logging:
     org:
         hibernate:
