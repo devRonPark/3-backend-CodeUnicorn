@@ -40,11 +40,11 @@ class CourseService {
             "algorithm" to "알고리즘",
             "database" to "데이터베이스"
         )
-        var courseInfoInDb: List<CourseInfo>? = null
+        var courseInfoInDb: List<CourseInfo>?
         var courseCount: Int = 0
 
         if (category == "all") {
-            courseInfoInDb = courseRepository.findByAllCourse(paging) ?: return null
+            courseInfoInDb = courseRepository.findByAllCourse(paging)
         } else {
             courseInfoInDb = courseRepository.findByCourse(categoryList[category] ?: "", paging) ?: return null
         }
@@ -54,7 +54,7 @@ class CourseService {
 
     // 코스 전체 개수 조회
     fun getCourseCount(category: String): Int {
-        var courseCount = 0
+        var courseCount: Int
 
         if (category == "all") {
             courseCount = courseRepository.findByAllCourseCount()
@@ -67,22 +67,12 @@ class CourseService {
 
     // 코스 상세 정보 조회
     fun getCourseDetail(courseId: String): CourseDetail {
-
-        var courseDetailInfo: CourseDetail
-
-        courseDetailInfo = courseDetailRepository.findByCourseDetail(courseId)
-
-        return courseDetailInfo
+        return courseDetailRepository.findByCourseDetail(courseId)
     }
 
     // 강의 상세 정보 조회
     fun getLectureInfo(courseId: String, lectureId: String): LectureDetailInfo {
-
-        var lectureInfo: LectureDetailInfo
-
-        lectureInfo = lectureRepository.findByLectureInfo(courseId, lectureId)
-
-        return lectureInfo
+        return lectureRepository.findByLectureInfo(courseId, lectureId)
     }
 
     @Throws(CurriculumNotExistException::class)
