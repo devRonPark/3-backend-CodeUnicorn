@@ -2,6 +2,13 @@ server:
     port: 443
     tomcat:
         uri-encoding: UTF-8
+    servelet:
+        session:
+            cookie:
+                domain: codeunicorn.kr
+                path: /
+                secure: true
+                http-only: true
 spring:
     application:
         name: CODE_UNICORN
