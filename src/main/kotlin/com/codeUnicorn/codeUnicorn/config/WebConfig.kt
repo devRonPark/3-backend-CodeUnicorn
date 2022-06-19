@@ -13,5 +13,6 @@ class WebConfig : WebMvcConfigurer {
             .allowedOrigins("https://codeunicorn.kr")
             .allowedMethods("GET", "POST", "PATCH")
             .allowCredentials(true)
+            .exposedHeaders("*")
     }
 }
