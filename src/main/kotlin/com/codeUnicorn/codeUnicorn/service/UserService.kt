@@ -103,11 +103,11 @@ class UserService {
 
         // create a cookie
         val cookie = Cookie("loginSessionId", session.id)
-        cookie.maxAge = 1 * 24 * 60 * 60 // expires in 1 days
-        cookie.secure = false
+        cookie.maxAge = 1 * 24 * 60 * 60; // expires in 1 days
+        cookie.secure = true
         cookie.isHttpOnly = true
         cookie.domain = "codeunicorn.kr"
-        cookie.path = "/"; // global cookie accessible every where
+        cookie.path = "/" // global cookie accessible every where
         // add cookie to response
         response.addCookie(cookie)
 
