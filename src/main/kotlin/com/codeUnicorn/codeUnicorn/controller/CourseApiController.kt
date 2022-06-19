@@ -32,7 +32,7 @@ class CourseApiController {
         @RequestParam category: String,
         @RequestParam page: Int
     ): ResponseEntity<Any> {
-        var paging: Int = 0
+        var paging = 0
         paging = if (page == 1 || page == 0) {
             0
         } else {
