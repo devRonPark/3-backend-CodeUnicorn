@@ -40,10 +40,11 @@ class CourseService {
             "algorithm" to "알고리즘",
             "database" to "데이터베이스"
         )
-        var courseInfoInDb: List<CourseInfo>?
+        var courseInfoInDb: List<CourseInfo>? = null
+        var courseCount: Int = 0
 
         if (category == "all") {
-            courseInfoInDb = courseRepository.findByAllCourse(paging)
+            courseInfoInDb = courseRepository.findByAllCourse(paging) ?: return null
         } else {
             courseInfoInDb = courseRepository.findByCourse(categoryList[category] ?: "", paging) ?: return null
         }
@@ -53,12 +54,20 @@ class CourseService {
 
     // 코스 전체 개수 조회
     fun getCourseCount(category: String): Int {
-        var courseCount: Int
+        val categoryList = mapOf(
+            "frontend" to "프론트엔드",
+            "backend" to "백엔드",
+            "mobile" to "모바일",
+            "language" to "프로그래밍 언어",
+            "algorithm" to "알고리즘",
+            "database" to "데이터베이스"
+        )
+        var courseCount = 0
 
         if (category == "all") {
             courseCount = courseRepository.findByAllCourseCount()
         } else {
-            courseCount = courseRepository.findByCourseCount(category)
+            courseCount = courseRepository.findByCourseCount(categoryList[category] ?: "")
         }
 
         return courseCount
@@ -66,12 +75,22 @@ class CourseService {
 
     // 코스 상세 정보 조회
     fun getCourseDetail(courseId: String): CourseDetail {
-        return courseDetailRepository.findByCourseDetail(courseId)
+
+        var courseDetailInfo: CourseDetail
+
+        courseDetailInfo = courseDetailRepository.findByCourseDetail(courseId)
+
+        return courseDetailInfo
     }
 
     // 강의 상세 정보 조회
     fun getLectureInfo(courseId: String, lectureId: String): LectureDetailInfo {
-        return lectureRepository.findByLectureInfo(courseId, lectureId)
+
+        var lectureInfo: LectureDetailInfo
+
+        lectureInfo = lectureRepository.findByLectureInfo(courseId, lectureId)
+
+        return lectureInfo
     }
 
     @Throws(CurriculumNotExistException::class)
