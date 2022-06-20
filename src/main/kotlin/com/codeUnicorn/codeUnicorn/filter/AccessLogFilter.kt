@@ -1,6 +1,7 @@
 package com.codeUnicorn.codeUnicorn.filter
 
 import mu.KotlinLogging
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.ContentCachingResponseWrapper
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletResponse
 private val log = KotlinLogging.logger {}
 
 @Component
+@Order(2)
 class AccessLogFilter : Filter {
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         val httpServletRequest: ContentCachingRequestWrapper =
