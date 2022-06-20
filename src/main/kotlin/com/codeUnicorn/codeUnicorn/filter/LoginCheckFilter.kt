@@ -7,6 +7,7 @@ import com.codeUnicorn.codeUnicorn.exception.UserAccessForbiddenException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
+import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -21,6 +22,7 @@ import javax.servlet.http.HttpServletResponse
 private val log = KotlinLogging.logger {}
 
 @Component
+@Order(3)
 class LoginCheckFilter : Filter {
     // 인증과 무관하게 항상 접근을 허용하는 요청 Url
     private val whitelist: Array<String> = arrayOf(
