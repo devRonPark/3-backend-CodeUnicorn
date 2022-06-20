@@ -126,9 +126,9 @@ class UserApiController { // 의존성 주입
         file: MultipartFile?
     ): ResponseEntity<Any> {
         // Content-Type : multipart/form-data 가 아닐 때 예외 처리
-        if (!request.contentType.contains("multipart/form-data")) {
-            throw NotSupportedContentTypeException(ExceptionMessage.CONTENT_TYPE_NOT_SUPPORTED)
-        }
+//        if (!request.contentType.contains("multipart/form-data")) {
+//            throw NotSupportedContentTypeException(ExceptionMessage.CONTENT_TYPE_NOT_SUPPORTED)
+//        }
         // Content-Type : multipart/form-data 인데 nickname, file 값이 존재한다면
         if (updateNicknameUserDto?.getNickname() == null && file != null && file.isEmpty) {
             throw NicknameOrProfileRequiredException(ExceptionMessage.NICKNAME_OR_PROFILE_REQUIRED)
