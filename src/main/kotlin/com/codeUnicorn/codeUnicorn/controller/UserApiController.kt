@@ -126,15 +126,22 @@ class UserApiController { // 의존성 주입
         @RequestParam("image")
         file: MultipartFile?
     ): ResponseEntity<Any> {
+        // Content-Type : multipart/form-data 가 아닐 때 예외 처리
+        if (!request.contentType.contains("multipart/form-data")) {
+            throw NotSupportedContentTypeException(ExceptionMessage.CONTENT_TYPE_NOT_SUPPORTED)
+        }
+        // Content-Type : multipart/form-data 인데 nickname, file 값이 존재한다면
         if (updateNicknameUserDto?.getNickname() == null && file != null && file.isEmpty) {
             throw NicknameOrProfileRequiredException(ExceptionMessage.NICKNAME_OR_PROFILE_REQUIRED)
         }
         // request.body 데이터로 nickname 데이터가 들어올 수도 안 들어올 수도 있다.
         if (updateNicknameUserDto?.getNickname() != null) {
+            log.info { "닉네임 업데이트" }
             // 닉네임 업데이트
             userService.updateNickname(Integer.parseInt(userId), updateNicknameUserDto.getNickname() ?: "")
         }
         if (file != null) {
+            log.info { "프로필 업데이트" }
             // S3 스토리지에 사용자 프로필 이미지 업로드
             val profilePath = s3FileUploadService.uploadFile(file)
             // 사용자 테이블에 프로필 경로 정보 업데이트
