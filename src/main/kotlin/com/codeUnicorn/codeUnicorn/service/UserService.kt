@@ -104,7 +104,7 @@ class UserService {
         // create a cookie
         val loginCookie = ResponseCookie.from("loginSessionId", session.id)
             .domain("codeunicorn.kr")
-            .sameSite("None")
+            .sameSite("Strict")
             .secure(true)
             .path("/")
             .maxAge(86400)

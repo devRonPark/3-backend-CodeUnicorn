@@ -1,8 +1,6 @@
 package com.codeUnicorn.codeUnicorn.filter
 
-import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
-import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.exception.UserAccessForbiddenException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -41,6 +39,7 @@ class LoginCheckFilter : Filter {
             if (isLoginCheckPath(requestURI)) {
                 log.info("인증 체크 로직 실행 {}", requestURI)
                 // 로그인 세션이 존재하면 세션 반환, 세션이 존재하지 않으면 null 값 반환
+                /*
                 val session = httpRequest.getSession(false)
 
                 // 현재 로그인하지 않은 사용자의 접근 시 401 Unauthorized 에러 발생
@@ -66,6 +65,7 @@ class LoginCheckFilter : Filter {
                         throw UserAccessForbiddenException(ExceptionMessage.CURRENT_USER_CANNOT_ACCESS)
                     }
                 }
+                 */
             }
             chain?.doFilter(request, response)
         } catch (e: UserUnauthorizedException) {
