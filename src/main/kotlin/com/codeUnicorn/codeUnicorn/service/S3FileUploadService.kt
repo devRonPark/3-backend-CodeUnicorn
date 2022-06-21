@@ -13,9 +13,11 @@ import com.codeUnicorn.codeUnicorn.exception.FileUploadFailException
 import java.io.IOException
 import java.io.InputStream
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
@@ -33,8 +35,9 @@ class S3FileUploadService {
     @Autowired
     private lateinit var fileUploadLogRepository: FileUploadLogRepository
 
+    @Async
     @Throws(RuntimeException::class)
-    fun uploadFile(file: MultipartFile): String {
+    fun uploadFile(file: MultipartFile): CompletableFuture<String> {
         // 파일 형식 검증
         val contentType: String = file.contentType ?: ""
         validateFileSupportedContentType(contentType)
@@ -44,7 +47,7 @@ class S3FileUploadService {
         val fileName: String = UUID.randomUUID().toString()
 
         // 파일 S3 에 업로드
-        return putS3(file, fileName)
+        return CompletableFuture.completedFuture(putS3(file, fileName))
     }
 
     // S3로 업로드
@@ -56,14 +59,17 @@ class S3FileUploadService {
         val inputStream: InputStream = uploadFile.inputStream
 
         try {
-            amazonS3Client.putObject(
-                PutObjectRequest(
-                    bucket,
-                    "images/$fileName",
-                    inputStream,
-                    objectMetadata
-                ).withCannedAcl(CannedAccessControlList.PublicRead)
-            )
+            val fileUploadFuture = CompletableFuture.supplyAsync(fun() {
+                amazonS3Client.putObject(
+                    PutObjectRequest(
+                        bucket,
+                        "images/$fileName",
+                        inputStream,
+                        objectMetadata
+                    ).withCannedAcl(CannedAccessControlList.PublicRead)
+                )
+            })
+            fileUploadFuture.join()
         } catch (e: IOException) {
             throw FileUploadFailException(ExceptionMessage.FILE_UPLOAD_FAIL)
         }

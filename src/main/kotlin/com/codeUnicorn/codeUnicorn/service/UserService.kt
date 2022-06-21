@@ -14,6 +14,8 @@ import com.codeUnicorn.codeUnicorn.exception.NicknameAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
@@ -22,6 +24,7 @@ import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseCookie
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
@@ -34,11 +37,14 @@ class UserService {
     @Autowired
     private lateinit var userAccessLogRepository: UserAccessLogRepository
 
+    @Async
     @Throws(UserNotExistException::class)
-    fun getUserInfo(userId: Int): User {
-        // 사용자 정보가 존재하지 않을 시 UserNotExistException 예외 발생
-        return userRepository.findByIdOrNull(userId)
-            ?: throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+    fun getUserInfo(userId: Int): CompletableFuture<User> {
+        val userInfoFuture = CompletableFuture.supplyAsync(fun(): User? {
+            return userRepository.findByIdOrNull(userId)
+        })
+        val userInfo = userInfoFuture.join() ?: throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        return CompletableFuture.completedFuture(userInfo)
     }
 
     // 리턴 값 : { "type": "로그인" || "회원가입", "data": { 사용자 정보 } }
@@ -206,22 +212,35 @@ class UserService {
     }
 
     // 사용자 닉네임 업데이트
+    @Async
     @Transactional
-    fun updateNickname(userId: Int, nickname: String): Int? {
-        val userWithDuplicatedNickname: User? = userRepository.findByNickname(nickname)
+    fun updateNickname(userId: Int, nickname: String): CompletableFuture<Int?> {
+        val nickDuplicatedCheckFuture = CompletableFuture.supplyAsync(fun(): User? {
+            return userRepository.findByNickname(nickname)
+        })
+        val nickDuplicateCheckResult = nickDuplicatedCheckFuture.join()
 
-        // 중복되는 닉네임이 이미 존재하는 경우
-        if (userWithDuplicatedNickname != null) {
+        if (nickDuplicateCheckResult != null) {
             throw NicknameAlreadyExistException(ExceptionMessage.NICKNAME_ALREADY_EXIST)
         }
-
+        val updatedAt = LocalDateTime.now()
         // 중복되는 닉네임이 존재하지 않는 경우 사용자 닉네임 업데이트
-        return userRepository.updateNickname(userId, nickname)
+        val nicknameUpdateFuture = CompletableFuture.supplyAsync(fun(): Int? {
+            return userRepository.updateNickname(userId, nickname, updatedAt)
+        })
+        val nicknameUpdateResult = nicknameUpdateFuture.join()
+        return CompletableFuture.completedFuture(nicknameUpdateResult)
     }
 
     // 사용자 프로필 업데이트
+    @Async
     @Transactional
-    fun updateUserProfile(userId: Int, profilePath: String) {
-        userRepository.updateProfile(userId, profilePath)
+    fun updateUserProfile(userId: Int, profilePath: String): CompletableFuture<Int?> {
+        val updatedAt = LocalDateTime.now()
+        val userProfileUpdateFuture = CompletableFuture.supplyAsync(fun(): Int? {
+            return userRepository.updateProfile(userId, profilePath, updatedAt)
+        })
+        val userProfileUpdateResult = userProfileUpdateFuture.join()
+        return CompletableFuture.completedFuture(userProfileUpdateResult)
     }
 }

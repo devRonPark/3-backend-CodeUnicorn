@@ -51,9 +51,9 @@ class UserApiController { // 의존성 주입
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "userId는 숫자만 가능합니다.")
         userId: String
     ): ResponseEntity<Any> {
-        val user: User = userService.getUserInfo(Integer.parseInt(userId))
-        val successResponse = SuccessResponse(200, user)
-
+        val userInfoFuture = userService.getUserInfo(Integer.parseInt(userId))
+        val userInfo = userInfoFuture.join()
+        val successResponse = SuccessResponse(200, userInfo)
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
 
@@ -125,30 +125,33 @@ class UserApiController { // 의존성 주입
         @RequestParam("image")
         file: MultipartFile?
     ): ResponseEntity<Any> {
-        // Content-Type : multipart/form-data 가 아닐 때 예외 처리
-//        if (!request.contentType.contains("multipart/form-data")) {
-//            throw NotSupportedContentTypeException(ExceptionMessage.CONTENT_TYPE_NOT_SUPPORTED)
-//        }
-        // Content-Type : multipart/form-data 인데 nickname, file 값이 존재한다면
+        // 데이터 검증
         if (updateNicknameUserDto?.getNickname() == null && file != null && file.isEmpty) {
             throw NicknameOrProfileRequiredException(ExceptionMessage.NICKNAME_OR_PROFILE_REQUIRED)
         }
+
         // request.body 데이터로 nickname 데이터가 들어올 수도 안 들어올 수도 있다.
         if (updateNicknameUserDto?.getNickname() != null) {
-            log.info { "닉네임 업데이트" }
+            log.info { "닉네임 업데이트2" }
             // 닉네임 업데이트
-            userService.updateNickname(Integer.parseInt(userId), updateNicknameUserDto.getNickname() ?: "")
+            val nicknameUpdateFuture = userService.updateNickname(
+                Integer.parseInt(userId),
+                updateNicknameUserDto.getNickname() ?: ""
+            )
+            nicknameUpdateFuture.join()
         }
         if (file != null) {
-            log.info { "프로필 업데이트" }
             // S3 스토리지에 사용자 프로필 이미지 업로드
-            val profilePath = s3FileUploadService.uploadFile(file)
+            val fileUploadFuture = s3FileUploadService.uploadFile(file)
+            val fileUploadResult = fileUploadFuture.join()
             // 사용자 테이블에 프로필 경로 정보 업데이트
-            userService.updateUserProfile(Integer.parseInt(userId), profilePath)
+            val userProfileUpdateFuture = userService.updateUserProfile(Integer.parseInt(userId), fileUploadResult)
+            userProfileUpdateFuture.join()
         }
-        val user: User = userService.getUserInfo(Integer.parseInt(userId))
-        val successResponse = SuccessResponse(200, user)
 
+        val userInfoFuture = userService.getUserInfo(Integer.parseInt(userId))
+        val userInfo = userInfoFuture.join()
+        val successResponse = SuccessResponse(200, userInfo)
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
 }
