@@ -125,6 +125,9 @@ class UserApiController { // 의존성 주입
         @RequestParam("image")
         file: MultipartFile?
     ): ResponseEntity<Any> {
+        log.info { "content-type : ${request.contentType}" }
+        log.info { "nickname 정보 : ${updateNicknameUserDto?.getNickname()}" }
+        log.info { "profile image 정보 : $file" }
         // 데이터 검증
         if (updateNicknameUserDto?.getNickname() == null && file != null && file.isEmpty) {
             throw NicknameOrProfileRequiredException(ExceptionMessage.NICKNAME_OR_PROFILE_REQUIRED)
