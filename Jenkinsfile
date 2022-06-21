@@ -8,9 +8,15 @@ pipeline {
         imagename = 'xhfkd00/codeunicorn'
         registryCredential = 'dockerhub'
         dockerImage = ''
+        SLACK_CHANNEL = '#codeunicorn'
     }
 
     stages {
+        stage('Start'){
+            steps{
+                slackSend(channel: SLACK_CHANNEL, color: "good", message:"STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+            }
+        }
         // git에서 repository clone
         stage('Clone') {
           steps {
@@ -122,5 +128,14 @@ pipeline {
            }
         }
 
+    }
+    // 빌드 성공, 실패 여부 젠킨스 발송
+    post {
+        success{
+            slackSend(channel: SLACK_CHANNEL, color: "good", message:"SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+        failure{
+            slackSend(channel: SLACK_CHANNEL, color: "danger", message:"FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
     }
 }
