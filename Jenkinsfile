@@ -8,7 +8,7 @@ pipeline {
         imagename = 'xhfkd00/codeunicorn'
         registryCredential = 'dockerhub'
         dockerImage = ''
-        SLACK_CHANNEL = '#codeunicorn'
+        SLACK_CHANNEL = '#code-unicorn-log-alarm'
     }
 
     stages {
@@ -129,7 +129,7 @@ pipeline {
         }
 
     }
-    // 빌드 성공, 실패 여부 젠킨스 발송
+    // 빌드 성공, 실패 여부 슬랙 전송
     post {
         success{
             slackSend(channel: SLACK_CHANNEL, color: "good", message:"SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
