@@ -132,25 +132,33 @@ class UserApiController { // 의존성 주입
 
         // request.body 데이터로 nickname 데이터가 들어올 수도 안 들어올 수도 있다.
         if (updateNicknameUserDto?.getNickname() != null) {
-            log.info { "닉네임 업데이트2" }
+            log.info { "(컨트롤러) : 닉네임 데이터만 존재함" }
+            log.info { "(컨트롤러) : 닉네임 데이터 업데이트" }
             // 닉네임 업데이트
             val nicknameUpdateFuture = userService.updateNickname(
                 Integer.parseInt(userId),
                 updateNicknameUserDto.getNickname() ?: ""
             )
             nicknameUpdateFuture.join()
+            log.info { "(컨트롤러) : 닉네임 데이터 업데이트 완료" }
         }
         if (file != null) {
+            log.info { "(컨트롤러) : 프로필 이미지 데이터만 존재함" }
+            log.info { "(컨트롤러) : 프로필 이미지 데이터 S3 스토리지에 업로드" }
             // S3 스토리지에 사용자 프로필 이미지 업로드
             val fileUploadFuture = s3FileUploadService.uploadFile(file)
             val fileUploadResult = fileUploadFuture.join()
+            log.info { "(컨트롤러) : 프로필 이미지 데이터 S3 스토리지 업로드 완료" }
+            log.info { "(컨트롤러) : 프로필 이미지 경로 사용자 정보 업데이트" }
             // 사용자 테이블에 프로필 경로 정보 업데이트
             val userProfileUpdateFuture = userService.updateUserProfile(Integer.parseInt(userId), fileUploadResult)
             userProfileUpdateFuture.join()
+            log.info { "(컨트롤러) : 프로필 이미지 경로 사용자 정보 업데이트 완료" }
         }
-
+        log.info { "(컨트롤러) : 업데이트된 사용자 정보 조회" }
         val userInfoFuture = userService.getUserInfo(Integer.parseInt(userId))
         val userInfo = userInfoFuture.join()
+        log.info { "(컨트롤러) : 업데이트된 사용자 정보 조회 완료" }
         val successResponse = SuccessResponse(200, userInfo)
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }

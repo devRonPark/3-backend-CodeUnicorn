@@ -40,10 +40,12 @@ class UserService {
     @Async
     @Throws(UserNotExistException::class)
     fun getUserInfo(userId: Int): CompletableFuture<User> {
+        log.info { "(서비스) : 사용자 정보 조회 쿼리" }
         val userInfoFuture = CompletableFuture.supplyAsync(fun(): User? {
             return userRepository.findByIdOrNull(userId)
         })
         val userInfo = userInfoFuture.join() ?: throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        log.info { "(서비스) : 사용자 정보 조회 완료" }
         return CompletableFuture.completedFuture(userInfo)
     }
 
@@ -215,20 +217,26 @@ class UserService {
     @Async
     @Transactional
     fun updateNickname(userId: Int, nickname: String): CompletableFuture<Int?> {
+        log.info { "(서비스) : 닉네임 중복여부 체크" }
         val nickDuplicatedCheckFuture = CompletableFuture.supplyAsync(fun(): User? {
+            log.info { "(서비스) : 닉네임 중복여부 조회 쿼리 날림" }
             return userRepository.findByNickname(nickname)
         })
         val nickDuplicateCheckResult = nickDuplicatedCheckFuture.join()
 
         if (nickDuplicateCheckResult != null) {
+            log.info { "(서비스) : 닉네임 중복됨" }
             throw NicknameAlreadyExistException(ExceptionMessage.NICKNAME_ALREADY_EXIST)
         }
+        log.info { "(서비스) : 닉네임 중복여부 체크 통과" }
         val updatedAt = LocalDateTime.now()
         // 중복되는 닉네임이 존재하지 않는 경우 사용자 닉네임 업데이트
         val nicknameUpdateFuture = CompletableFuture.supplyAsync(fun(): Int? {
+            log.info { "(서비스) : 닉네임 업데이트 쿼리 날림" }
             return userRepository.updateNickname(userId, nickname, updatedAt)
         })
         val nicknameUpdateResult = nicknameUpdateFuture.join()
+        log.info { "(서비스) : 닉네임 업데이트 완료" }
         return CompletableFuture.completedFuture(nicknameUpdateResult)
     }
 
@@ -238,9 +246,11 @@ class UserService {
     fun updateUserProfile(userId: Int, profilePath: String): CompletableFuture<Int?> {
         val updatedAt = LocalDateTime.now()
         val userProfileUpdateFuture = CompletableFuture.supplyAsync(fun(): Int? {
+            log.info { "(서비스) : 프로필 이미지 경로 사용자 정보 업데이트 쿼리 날림" }
             return userRepository.updateProfile(userId, profilePath, updatedAt)
         })
         val userProfileUpdateResult = userProfileUpdateFuture.join()
+        log.info { "(서비스) : 프로필 이미지 경로 사용자 정보 업데이트 완료" }
         return CompletableFuture.completedFuture(userProfileUpdateResult)
     }
 }
