@@ -77,7 +77,7 @@ class UserService {
             // 회원가입 사용자의 브라우저 정보 및 IP 주소 정보 수집
             val browserName: String = this.getBrowserInfo(request)
             val ip: String = this.getClientIp(request)
-            val defaultProfilePath = "/static/user_default_profile.png"
+            val defaultProfilePath = "https://api.codeunicorn.kr/static/user_default_profile.png"
             // DB 에 저장할 사용자 정보 DTO 생성
             val newUserDto =
                 CreateUserDto(
@@ -111,11 +111,10 @@ class UserService {
 
         // create a cookie
         val loginCookie = ResponseCookie.from("loginSessionId", session.id)
-            .domain("codeunicorn.kr")
-            .sameSite("Strict")
+            .domain("api.codeunicorn.kr")
             .secure(true)
+            .httpOnly(true)
             .path("/")
-            .maxAge(86400)
             .build()
         response.addHeader("Set-Cookie", loginCookie.toString())
 
