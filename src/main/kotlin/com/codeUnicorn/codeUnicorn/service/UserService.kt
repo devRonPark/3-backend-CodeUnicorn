@@ -117,7 +117,7 @@ class UserService {
             .path("/")
             .maxAge(86400)
             .build()
-        response.addHeader("set-cookie", loginCookie.toString())
+        response.addHeader("Set-Cookie", loginCookie.toString())
 
         // 로그인 사용자의 브라우저 정보 및 IP 주소 정보 수집
         val browserName: String = this.getBrowserInfo(request)
