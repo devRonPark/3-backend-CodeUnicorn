@@ -40,7 +40,8 @@ class S3FileUploadService {
     fun uploadFile(file: MultipartFile): CompletableFuture<String> {
         // 파일 형식 검증
         val contentType: String = file.contentType ?: ""
-        validateFileSupportedContentType(contentType)
+        log.info { "contentType: $contentType" }
+//        validateFileSupportedContentType(contentType)
         // 파일 최대 용량 초과 여부 검증은 스프링부트에 설정해 준 값에 의해 자동으로 진행된다.
 
         // 파일 이름 정의

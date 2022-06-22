@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -126,13 +127,16 @@ class UserApiController { // 의존성 주입
         updateNicknameUserDto: UpdateNicknameUserDto?,
         @RequestParam("image")
         file: MultipartFile?,
-        multipartRequest: MultipartHttpServletRequest
+        multipartRequest: MultipartHttpServletRequest,
+        @RequestHeader
+        requestHeader: Map<String, Any>
     ): ResponseEntity<Any> {
         val nickname = multipartRequest.getParameter("nickname")
         val profile = multipartRequest.getFile("image")
+        log.info { "request header : $requestHeader" }
         log.info { "content-type : ${multipartRequest.contentType}" }
         log.info { "nickname : ${multipartRequest.getParameter("nickname")}" }
-        log.info { "profile : ${multipartRequest.getFile("image")}" }
+        log.info { "image : ${multipartRequest.getFile("image")?.originalFilename ?: ""}" }
         // 데이터 검증
         if (nickname == null && profile != null && profile.isEmpty) {
             throw NicknameOrProfileRequiredException(ExceptionMessage.NICKNAME_OR_PROFILE_REQUIRED)
