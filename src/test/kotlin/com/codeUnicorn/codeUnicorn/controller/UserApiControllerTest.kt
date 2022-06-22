@@ -80,36 +80,6 @@ class UserApiControllerTest {
             .andDo(MockMvcResultHandlers.print())
     }
 
-    @DisplayName("만약 이메일 값이 naver 혹은 gmail이 아니라면")
-    @Test
-    fun loginFailTest3() {
-        // 실패 케이스 2 : 이메일 값이 naver 혹은 gmail 이 아닌 경우
-        // given
-        val userRequest =
-            RequestUserDto("gildong@gildong.com", "홍길동")
-
-        val json = jacksonObjectMapper().writeValueAsString(userRequest)
-        println(json)
-
-        // when
-        val performLogin = mockMvc.perform(
-            MockMvcRequestBuilders.post("/users/login")
-                .content(json)
-                .contentType("application/json")
-                .accept("application/json")
-        )
-        // then
-        performLogin
-            .andExpect(MockMvcResultMatchers.status().isBadRequest)
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.status").value("400"))
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.method").value("POST"))
-            .andExpect(
-                MockMvcResultMatchers.jsonPath("\$.message").value("이메일은 반드시 @gmail.com 혹은 @naver.com 를 포함해야 합니다.")
-            )
-            .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
-            .andDo(MockMvcResultHandlers.print())
-    }
-
     @DisplayName("만약 이메일 값이 형식에 어긋난다면")
     @Test
     fun loginFailTest4() {
@@ -135,7 +105,7 @@ class UserApiControllerTest {
             .andExpect(MockMvcResultMatchers.jsonPath("\$.status").value("400"))
             .andExpect(MockMvcResultMatchers.jsonPath("\$.method").value("POST"))
             .andExpect(
-                MockMvcResultMatchers.jsonPath("\$.message").value("이메일은 반드시 @gmail.com 혹은 @naver.com 를 포함해야 합니다.")
+                MockMvcResultMatchers.jsonPath("\$.message").value("이메일 형식에 어긋납니다.")
             )
             .andExpect(MockMvcResultMatchers.jsonPath("\$.path").value("/users/login"))
             .andDo(MockMvcResultHandlers.print())

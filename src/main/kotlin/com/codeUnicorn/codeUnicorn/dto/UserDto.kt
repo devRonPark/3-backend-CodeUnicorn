@@ -8,8 +8,8 @@ import javax.validation.constraints.Size
 data class RequestUserDto(
     @field: NotBlank(message = "이메일이 누락되었습니다.")
     @field: Pattern(
-        regexp = "^[0-9a-zA-Z]([-_\\.]?[0-9a-zA-Z])*@(gmail|naver)\\.com\$",
-        message = "이메일은 반드시 @gmail.com 혹은 @naver.com 를 포함해야 합니다."
+        regexp = "^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+\$",
+        message = "이메일 형식에 어긋납니다."
     )
     var email: String,
     @field: NotBlank(message = "닉네임이 누락되었습니다.")

@@ -2,7 +2,6 @@ package com.codeUnicorn.codeUnicorn.service
 
 import com.codeUnicorn.codeUnicorn.constant.BEHAVIOR_TYPE
 import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
-import com.codeUnicorn.codeUnicorn.constant.PLATFORM_TYPE
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.domain.user.UserAccessLog
 import com.codeUnicorn.codeUnicorn.domain.user.UserAccessLogRepository
@@ -23,7 +22,6 @@ import javax.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.ResponseCookie
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 
@@ -68,11 +66,7 @@ class UserService {
         // 회원가입 처리
         if (userInfoInDb == null) {
             // request body의 email 값에 따라 platformType 결정
-            if (email.contains("naver")) {
-                platformType = PLATFORM_TYPE.NAVER.toString()
-            } else if (email.contains("gmail")) {
-                platformType = PLATFORM_TYPE.GOOGLE.toString()
-            }
+            platformType = email.slice((email.indexOf("@") + 1) until email.indexOf("."))
 
             // 회원가입 사용자의 브라우저 정보 및 IP 주소 정보 수집
             val browserName: String = this.getBrowserInfo(request)
@@ -95,9 +89,7 @@ class UserService {
             returnData["type"] = "회원가입"
             // 로그인 처리
         } else {
-
             user = userInfoInDb
-
             returnData["type"] = "로그인"
         }
         returnData["user"] = user
@@ -110,13 +102,8 @@ class UserService {
         session.setAttribute("user", userInfoForSession)
 
         // create a cookie
-        val loginCookie = ResponseCookie.from("loginSessionId", session.id)
-            .domain("api.codeunicorn.kr")
-            .secure(true)
-            .httpOnly(true)
-            .path("/")
-            .build()
-        response.addHeader("Set-Cookie", loginCookie.toString())
+        val loginSessionId = session.id
+        returnData["loginSessionId"] = loginSessionId
 
         // 로그인 사용자의 브라우저 정보 및 IP 주소 정보 수집
         val browserName: String = this.getBrowserInfo(request)

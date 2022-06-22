@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.multipart.MultipartHttpServletRequest
 
 private val log = KotlinLogging.logger {}
 
@@ -76,6 +77,7 @@ class UserApiController { // 의존성 주입
         userInfo["id"] = user.id
         userInfo["nickname"] = user.nickname
         userInfo["profilePath"] = user.profilePath
+        userInfo["loginSessionId"] = result["loginSessionId"]
         val successResponse = SuccessResponse(200, userInfo)
 
         if (result["type"] == "회원가입") {
@@ -123,33 +125,36 @@ class UserApiController { // 의존성 주입
         @RequestParam("nickname")
         updateNicknameUserDto: UpdateNicknameUserDto?,
         @RequestParam("image")
-        file: MultipartFile?
+        file: MultipartFile?,
+        multipartRequest: MultipartHttpServletRequest
     ): ResponseEntity<Any> {
-        log.info { "content-type : ${request.contentType}" }
-        log.info { "nickname 정보 : ${updateNicknameUserDto?.getNickname()}" }
-        log.info { "profile image 정보 : $file" }
+        val nickname = multipartRequest.getParameter("nickname")
+        val profile = multipartRequest.getFile("image")
+        log.info { "content-type : ${multipartRequest.contentType}" }
+        log.info { "nickname : ${multipartRequest.getParameter("nickname")}" }
+        log.info { "profile : ${multipartRequest.getFile("image")}" }
         // 데이터 검증
-        if (updateNicknameUserDto?.getNickname() == null && file != null && file.isEmpty) {
+        if (nickname == null && profile != null && profile.isEmpty) {
             throw NicknameOrProfileRequiredException(ExceptionMessage.NICKNAME_OR_PROFILE_REQUIRED)
         }
 
         // request.body 데이터로 nickname 데이터가 들어올 수도 안 들어올 수도 있다.
-        if (updateNicknameUserDto?.getNickname() != null) {
+        if (nickname != null) {
             log.info { "(컨트롤러) : 닉네임 데이터만 존재함" }
             log.info { "(컨트롤러) : 닉네임 데이터 업데이트" }
             // 닉네임 업데이트
             val nicknameUpdateFuture = userService.updateNickname(
                 Integer.parseInt(userId),
-                updateNicknameUserDto.getNickname() ?: ""
+                nickname
             )
             nicknameUpdateFuture.join()
             log.info { "(컨트롤러) : 닉네임 데이터 업데이트 완료" }
         }
-        if (file != null) {
+        if (profile != null) {
             log.info { "(컨트롤러) : 프로필 이미지 데이터만 존재함" }
             log.info { "(컨트롤러) : 프로필 이미지 데이터 S3 스토리지에 업로드" }
             // S3 스토리지에 사용자 프로필 이미지 업로드
-            val fileUploadFuture = s3FileUploadService.uploadFile(file)
+            val fileUploadFuture = s3FileUploadService.uploadFile(profile)
             val fileUploadResult = fileUploadFuture.join()
             log.info { "(컨트롤러) : 프로필 이미지 데이터 S3 스토리지 업로드 완료" }
             log.info { "(컨트롤러) : 프로필 이미지 경로 사용자 정보 업데이트" }
