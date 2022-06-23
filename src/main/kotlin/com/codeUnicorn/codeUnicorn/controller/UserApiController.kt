@@ -59,6 +59,22 @@ class UserApiController { // 의존성 주입
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
 
+    // 사용자 회원가입 API
+    @PostMapping(path = ["/signup"])
+    fun signup(
+        // Request Body 데이터 유효성 검증
+        @Valid @RequestBody requestUserDto: RequestUserDto,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ): ResponseEntity<SuccessResponse> {
+        if (request.contentType != "application/json") {
+            throw NotSupportedContentTypeException(ExceptionMessage.CONTENT_TYPE_NOT_SUPPORTED)
+        }
+        val userInfo: User = userService.signup(requestUserDto, request, response)
+        val successResponse = SuccessResponse(201, userInfo)
+        return ResponseEntity.status(HttpStatus.CREATED).body(successResponse)
+    }
+
     // 사용자 로그인 API
     @PostMapping(path = ["/login"])
     fun login(
@@ -70,20 +86,18 @@ class UserApiController { // 의존성 주입
         if (request.contentType != "application/json") {
             throw NotSupportedContentTypeException(ExceptionMessage.CONTENT_TYPE_NOT_SUPPORTED)
         }
-        // 각각 회원가입 || 로그인, 사용자 데이터 리턴
-        val result: MutableMap<String, Any> = userService.login(requestUserDto, request, response)
+        // 로그인한 사용자 데이터 리턴
+        val result: Map<String, Any> = userService.login(requestUserDto, request, response)
         val user: User = result["user"] as User
         // 응답해 줄 userInfo 데이터 가공
-        val userInfo: MutableMap<String, Any?> = mutableMapOf<String, Any?>()
-        userInfo["id"] = user.id
-        userInfo["nickname"] = user.nickname
-        userInfo["profilePath"] = user.profilePath
-        userInfo["loginSessionId"] = result["loginSessionId"]
+        val userInfo: Map<String, Any?> = mapOf(
+            "id" to user.id,
+            "nickname" to user.nickname,
+            "profilePath" to user.profilePath,
+            "loginSessionId" to result["loginSessionId"]
+        )
         val successResponse = SuccessResponse(200, userInfo)
 
-        if (result["type"] == "회원가입") {
-            return ResponseEntity.status(HttpStatus.CREATED).body(successResponse)
-        }
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
 
@@ -123,9 +137,9 @@ class UserApiController { // 의존성 주입
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "userId는 숫자만 가능합니다.")
         userId: String,
         @Valid
-        @RequestParam("nickname")
+        @RequestParam(value = "nickname", required = false)
         updateNicknameUserDto: UpdateNicknameUserDto?,
-        @RequestParam("image")
+        @RequestParam(value = "image", required = false)
         file: MultipartFile?,
         multipartRequest: MultipartHttpServletRequest,
         @RequestHeader

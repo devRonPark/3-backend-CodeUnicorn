@@ -11,6 +11,7 @@ import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UserAccessLogDto
 import com.codeUnicorn.codeUnicorn.exception.NicknameAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
+import com.codeUnicorn.codeUnicorn.exception.UserAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDateTime
@@ -47,63 +48,68 @@ class UserService {
         return CompletableFuture.completedFuture(userInfo)
     }
 
+    @Throws(UserAlreadyExistException::class)
+    fun signup(
+        requestUserDto: RequestUserDto,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ): User {
+        val (email, nickname) = requestUserDto
+        // request body의 email 값에 따라 platformType 결정
+        val platformType = email.slice((email.indexOf("@") + 1) until email.indexOf("."))
+        // 이메일로 사용자 존재 여부 파악
+        if (userRepository.findByEmail(email) != null) {
+            throw UserAlreadyExistException(ExceptionMessage.USER_ALREADY_EXIST)
+        }
+
+        // 회원가입 사용자의 브라우저 정보 및 IP 주소 정보 수집
+        val browserName: String = this.getBrowserInfo(request)
+        val ip: String = this.getClientIp(request)
+        val defaultProfilePath = "https://api.codeunicorn.kr/static/user_default_profile.png"
+        // DB 에 저장할 사용자 정보 DTO 생성
+        val newUserDto =
+            CreateUserDto(
+                email,
+                nickname,
+                platformType,
+                defaultProfilePath,
+                ip,
+                browserName
+            )
+        // 사용자 정보 DTO => 사용자 정보 엔티티로 변환
+        val user = newUserDto.toEntity()
+        userRepository.save(user) // 회원 정보 DB에 저장
+        return user
+    }
+
     // 리턴 값 : { "type": "로그인" || "회원가입", "data": { 사용자 정보 } }
     @Transactional // 트랜잭션 => 실패 => 롤백!
     fun login(
         requestUserDto: RequestUserDto,
         request: HttpServletRequest,
         response: HttpServletResponse
-    ): MutableMap<String, Any> {
-        var platformType = ""
-        val returnData: MutableMap<String, Any> = mutableMapOf()
+    ): Map<String, Any> {
         val (email) = requestUserDto
 
         // 이메일로 사용자 존재 여부 파악
-        val userInfoInDb: User? = userRepository.findByEmail(email)
+        val userInfoInDb: User = userRepository.findByEmail(email)
+            ?: throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
 
-        val user: User
-
-        // 회원가입 처리
-        if (userInfoInDb == null) {
-            // request body의 email 값에 따라 platformType 결정
-            platformType = email.slice((email.indexOf("@") + 1) until email.indexOf("."))
-
-            // 회원가입 사용자의 브라우저 정보 및 IP 주소 정보 수집
-            val browserName: String = this.getBrowserInfo(request)
-            val ip: String = this.getClientIp(request)
-            val defaultProfilePath = "https://api.codeunicorn.kr/static/user_default_profile.png"
-            // DB 에 저장할 사용자 정보 DTO 생성
-            val newUserDto =
-                CreateUserDto(
-                    requestUserDto.email,
-                    requestUserDto.nickname,
-                    platformType,
-                    defaultProfilePath,
-                    ip,
-                    browserName
-                )
-            // 사용자 정보 DTO => 사용자 정보 엔티티로 변환
-            user = newUserDto.toEntity()
-            userRepository.save(user) // 회원 정보 DB에 저장
-
-            returnData["type"] = "회원가입"
-            // 로그인 처리
-        } else {
-            user = userInfoInDb
-            returnData["type"] = "로그인"
-        }
-        returnData["user"] = user
         // 세션 발급
         // 세션이 존재하지 않는 경우 신규 세션 발급
         val session: HttpSession = request.getSession(true)
         // 사용자 객체 데이터 변환 (Object to JSON string)
-        val userInfoForSession = jacksonObjectMapper().writeValueAsString(user)
+        val userInfoForSession = jacksonObjectMapper().writeValueAsString(userInfoInDb)
         // 세션에 로그인 회원 정보 보관
         session.setAttribute("user", userInfoForSession)
 
         // create a cookie
         val loginSessionId = session.id
-        returnData["loginSessionId"] = loginSessionId
+
+        val returnData = mapOf(
+            "user" to userInfoInDb,
+            "loginSessionId" to loginSessionId
+        )
 
         // 로그인 사용자의 브라우저 정보 및 IP 주소 정보 수집
         val browserName: String = this.getBrowserInfo(request)
@@ -112,7 +118,7 @@ class UserService {
         // 로그인 로그 쌓기
         val userAccessLog =
             UserAccessLogDto(
-                user.id ?: 0,
+                userInfoInDb.id ?: 0,
                 BEHAVIOR_TYPE.LOGIN.toString(),
                 ip,
                 browserName,

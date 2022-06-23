@@ -8,6 +8,7 @@ object ExceptionMessage {
     const val CURRENT_USER_CANNOT_ACCESS = "현재 사용자가 접근할 수 없는 리소스입니다."
     const val UNAUTHORIZED_USER_CANNOT_ACCESS = "로그인하지 않은 사용자가 접근할 수 없는 리소스입니다."
     const val SESSION_NOT_EXIST = "세션이 존재하지 않습니다."
+    const val USER_ALREADY_EXIST = "이미 회원가입한 사용자입니다."
     const val NICKNAME_ALREADY_EXIST = "이미 존재하는 닉네임입니다."
     const val CONTENT_TYPE_NOT_SUPPORTED = "지원하지 않는 콘텐츠 형식입니다."
     const val NICKNAME_OR_PROFILE_REQUIRED = "수정할 닉네임이나 프로필 이미지가 누락되었습니다."

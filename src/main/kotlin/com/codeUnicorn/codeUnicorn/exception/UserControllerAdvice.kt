@@ -70,6 +70,23 @@ class UserControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
     }
 
+    // 이미 사용자가 회원가입한 경우 발생
+    @ExceptionHandler(value = [UserAlreadyExistException::class])
+    fun handleUserAlreadyExistException(
+        e: UserAlreadyExistException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.CONFLICT.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+        }
+        // ResponseEntity
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse)
+    }
+
     // 사용자 정보가 존재하지 않을 시 발생
     @ExceptionHandler(value = [UserNotExistException::class])
     fun handleUserNotExistException(
