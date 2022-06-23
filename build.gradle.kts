@@ -38,6 +38,7 @@ dependencies { // 프로젝트에 필요한 라이브러리 관리
     implementation("org.springframework.session:spring-session-jdbc")
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
+    implementation("org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16")
     implementation("org.codehaus.janino:janino")
     implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
 

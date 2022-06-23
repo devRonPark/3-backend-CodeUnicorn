@@ -7,7 +7,7 @@
     </springProfile>
     <springProfile name="dev">
         <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
-        <property name="LOG_FILE_PATH" value="/var/codeUnicorn_log/dev"/>
+        <property name="LOG_FILE_PATH" value="/var/codeUnicorn_log/codeUnicorn_log/dev"/>
         <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
         <property name="LOG_FILE_NAME" value="dev_log"/>
         <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->
@@ -100,7 +100,14 @@
         </then>
     </if>
 
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    <logger name="jdbc" level="OFF" appender-ref="FILE"/>
+
+    <logger name="jdbc.sqlonly" level="OFF" appender-ref="FILE"/>
+    <logger name="jdbc.sqltiming" level="INFO" appender-ref="FILE"/>
+    <logger name="jdbc.audit" level="OFF" appender-ref="FILE"/>
+    <logger name="jdbc.resultset" level="OFF" appender-ref="FILE"/>
+    <logger name="jdbc.resultsettable" level="INFO" appender-ref="FILE"/>
+    <logger name="jdbc.connection" level="OFF" appender-ref="FILE"/>
 
     <root level="${LOG_LEVEL}">
         <springProfile name="local">
