@@ -111,4 +111,21 @@ class CourseApiController {
         val successResponse = SuccessResponse(200, lectureInfo)
         return ResponseEntity.status(HttpStatus.OK).body(successResponse)
     }
+
+    // 전체 강의 정보 조회
+    @GetMapping(path = ["/all"])
+    fun GetCourseAllList(): ResponseEntity<Any> {
+
+        val category: String = "all"
+
+        val courseInfo = courseService.getCourseAllList()
+        val courseCount = courseService.getCourseCount(category)
+
+        val course = HashMap<String, Any>()
+        course["courses"] = courseInfo
+        course["courseCount"] = courseCount
+
+        val successResponse = SuccessResponse(200, course)
+        return ResponseEntity.status(HttpStatus.OK).body(successResponse)
+    }
 }

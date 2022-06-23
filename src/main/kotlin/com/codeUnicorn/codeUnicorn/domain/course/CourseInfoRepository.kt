@@ -9,12 +9,12 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
 
-    // 전체 코스 정보 조회
+    // 전체 코스 정보 조회(페이징)
     @Transactional
     @Query(value = "select * from course limit :paging, 9", nativeQuery = true)
     fun findByAllCourse(@Param("paging") paging: Int): List<CourseInfo>
 
-    // 특정 코스 정보 조회
+    // 특정 코스 정보 조회(페이징)
     @Transactional
     @Query(
         value = "select * from course  where category = :category limit :paging, 9",
@@ -31,4 +31,9 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     @Transactional
     @Query(value = "select count(*) from course where category = :category", nativeQuery = true)
     fun findByCourseCount(@Param("category") category: String): Int
+
+    // 모든 코스 정보 조회
+    @Transactional
+    @Query(value = "select * from course", nativeQuery = true)
+    fun findByAllCourseList(): List<CourseInfo>
 }

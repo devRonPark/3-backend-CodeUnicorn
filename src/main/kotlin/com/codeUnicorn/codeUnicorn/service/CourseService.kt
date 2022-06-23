@@ -98,4 +98,9 @@ class CourseService {
         return curriculumInfoRepository.findByCourseId(courseId)
             ?: throw CurriculumNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
     }
+
+    // 모든 강의 정보 조회
+    fun getCourseAllList(): List<CourseInfo> {
+        return courseRepository.findByAllCourseList()
+    }
 }
