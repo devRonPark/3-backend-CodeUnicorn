@@ -126,6 +126,6 @@ class CourseApiController {
         course["courseCount"] = courseCount
 
         val successResponse = SuccessResponse(200, course)
-        return ResponseEntity.status(HttpStatus.OK).body(successResponse)
+        return ResponseEntity.status(HttpStatus.OK).body(course)
     }
 }
