@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -125,7 +126,25 @@ class CourseApiController {
         course["courses"] = courseInfo
         course["courseCount"] = courseCount
 
-        val successResponse = SuccessResponse(200, course)
         return ResponseEntity.status(HttpStatus.OK).body(course)
+    }
+
+    @PostMapping(path = ["/{courseId}/likes"])
+    fun postCourseLikie(
+        request: HttpServletRequest,
+        @PathVariable(value = "courseId")
+        @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "courseId는 숫자만 가능합니다.")
+        courseId: String
+    ): ResponseEntity<Any> {
+
+        println("API까지 접속")
+        println(courseId)
+        // println(request.session)
+
+        val courseIdToInt = courseId.toInt()
+
+        courseService.postCourseLike(request, courseIdToInt)
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(courseId)
     }
 }

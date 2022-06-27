@@ -1,18 +1,19 @@
 package com.codeUnicorn.codeUnicorn.exception
 
-import com.codeUnicorn.codeUnicorn.controller.UserApiController
+import com.codeUnicorn.codeUnicorn.controller.CourseApiController
 import com.codeUnicorn.codeUnicorn.domain.Error
 import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
-import javax.servlet.http.HttpServletRequest
-import javax.validation.ConstraintViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
+import javax.validation.ConstraintViolationException
 
-@RestControllerAdvice(basePackageClasses = [UserApiController::class])
+@RestControllerAdvice(basePackageClasses = [CourseApiController::class])
 class CourseControllerAdvice {
     // request body, query 에 대한 예외 처리
     @ExceptionHandler(value = [MethodArgumentNotValidException::class, NumberFormatException::class])
@@ -81,5 +82,22 @@ class CourseControllerAdvice {
         }
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
+    }
+
+    // 코스 관심 목록 추가시 추가가 되어 있는 코스일 경우 발생
+    @ExceptionHandler(value = [LikeCourseAlreadyExistException::class])
+    fun handleNicknameAlreadyExistException(
+        e: LikeCourseAlreadyExistException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.CONFLICT.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+            this.timestamp = LocalDateTime.now()
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse)
     }
 }

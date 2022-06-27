@@ -9,10 +9,18 @@ import com.codeUnicorn.codeUnicorn.domain.course.CurriculumInfoRepository
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureDetailInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureRepository
+import com.codeUnicorn.codeUnicorn.domain.likeCourse.LikeCourseRepository
+import com.codeUnicorn.codeUnicorn.domain.user.User
+import com.codeUnicorn.codeUnicorn.dto.CreateCourseLikeDto
 import com.codeUnicorn.codeUnicorn.exception.CurriculumNotExistException
+import com.codeUnicorn.codeUnicorn.exception.LikeCourseAlreadyExistException
+import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpSession
 
 private val log = KotlinLogging.logger {}
 
@@ -29,6 +37,9 @@ class CourseService {
 
     @Autowired
     private lateinit var curriculumInfoRepository: CurriculumInfoRepository
+
+    @Autowired
+    private lateinit var likeCourseRepository: LikeCourseRepository
 
     // 코스 정보 조회
     fun getCourseList(category: String, paging: Int): List<CourseInfo>? {
@@ -102,5 +113,35 @@ class CourseService {
     // 모든 강의 정보 조회
     fun getCourseAllList(): List<CourseInfo> {
         return courseRepository.findByAllCourseList()
+    }
+
+    // 관심 코스 등록
+    fun postCourseLike(request: HttpServletRequest, courseId: Int) {
+
+        val session: HttpSession = request.getSession(false)
+            ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
+
+        // 세션 속 저장되어 있는 사용자 정보 가져오기
+        val userInfoInSession: User =
+            jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
+
+        // 세션 속 저장되어 있는 사용자 indexId 변수에 할당
+        val userId = userInfoInSession.id
+
+        // 사용자 indexId 기반으로 courseId를 좋아요 했는지 확인
+        val likeCourseDB = likeCourseRepository.findByLikeCourse(userId, courseId)
+
+        // 이미 관심 코스로 등록되어 있는 경우 에러 발생
+        if (likeCourseDB != null) {
+            throw LikeCourseAlreadyExistException(ExceptionMessage.LIKE_COURSE_ALREADY_EXIST)
+        }
+
+        val newCourseLikeDto = CreateCourseLikeDto(
+            userId,
+            courseId
+        )
+
+        val likeCourse = newCourseLikeDto.toEntity()
+        likeCourseRepository.save(likeCourse)
     }
 }
