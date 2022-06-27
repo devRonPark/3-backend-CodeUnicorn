@@ -1,10 +1,5 @@
 package com.codeUnicorn.codeUnicorn.filter
 
-import mu.KotlinLogging
-import org.springframework.core.annotation.Order
-import org.springframework.stereotype.Component
-import org.springframework.web.util.ContentCachingRequestWrapper
-import org.springframework.web.util.ContentCachingResponseWrapper
 import java.util.UUID
 import javax.servlet.Filter
 import javax.servlet.FilterChain
@@ -12,6 +7,11 @@ import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import mu.KotlinLogging
+import org.springframework.core.annotation.Order
+import org.springframework.stereotype.Component
+import org.springframework.web.util.ContentCachingRequestWrapper
+import org.springframework.web.util.ContentCachingResponseWrapper
 
 private val log = KotlinLogging.logger {}
 
@@ -39,7 +39,7 @@ class AccessLogFilter : Filter {
         log.info(accessLog)
 
         // response
-        val resContent: String = String(httpServletResponse.contentAsByteArray)
+        val resContent = String(httpServletResponse.contentAsByteArray)
         val httpStatus: Int = httpServletResponse.status
 
         httpServletResponse.copyBodyToResponse()
@@ -52,7 +52,10 @@ class AccessLogFilter : Filter {
         val remoteAddr: String = getRemoteAddr(httpServletRequest)
         val method: String = getMethod(httpServletRequest)
         val queryString: String? = getQueryString(httpServletRequest)
-        val requestBody: String = String(httpServletRequest.contentAsByteArray)
+        val contentType: String? = getContentType(httpServletRequest)
+        val requestBody = String(httpServletRequest.contentAsByteArray)
+        val contentLength: Int = getContentLength(httpServletRequest)
+        val cookie: String? = getCookieHeader(httpServletRequest)
         val sb = StringBuilder()
         sb.append("[").append(traceId).append("] ")
         sb.append("{")
@@ -77,6 +80,21 @@ class AccessLogFilter : Filter {
                 .append(":")
                 .append("\"").append(queryString).append("\"")
         }
+        sb
+            .append(",")
+            .append("\"").append("cookie").append("\"")
+            .append(":")
+            .append("\"").append(cookie).append("\"")
+        sb
+            .append(",")
+            .append("\"").append("contentType").append("\"")
+            .append(":")
+            .append("\"").append(contentType).append("\"")
+        sb
+            .append(",")
+            .append("\"").append("contentLength").append("\"")
+            .append(":")
+            .append("\"").append(contentLength).append("\"")
         if (requestBody.isNotEmpty()) {
             sb
                 .append(",")
@@ -106,5 +124,17 @@ class AccessLogFilter : Filter {
 
     private fun getRequestURL(httpServletRequest: ContentCachingRequestWrapper): String {
         return httpServletRequest.requestURL.toString()
+    }
+
+    private fun getContentType(httpServletRequest: ContentCachingRequestWrapper): String? {
+        return httpServletRequest.contentType
+    }
+
+    private fun getContentLength(httpServletRequest: ContentCachingRequestWrapper): Int {
+        return httpServletRequest.contentLength
+    }
+
+    private fun getCookieHeader(httpServletRequest: ContentCachingRequestWrapper): String? {
+        return httpServletRequest.getHeader("cookie")
     }
 }

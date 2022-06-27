@@ -13,4 +13,6 @@ object ExceptionMessage {
     const val CONTENT_TYPE_NOT_SUPPORTED = "지원하지 않는 콘텐츠 형식입니다."
     const val NICKNAME_OR_PROFILE_REQUIRED = "수정할 닉네임이나 프로필 이미지가 누락되었습니다."
     const val LIKE_COURSE_ALREADY_EXIST = "이미 관심코스로 등록되었습니다."
+    const val UPDATE_QUERY_FAIL = "업데이트 쿼리 요청이 실패했습니다."
+    const val SELECT_QUERY_FAIL = "조회 쿼리 요청이 실패했습니다."
 }

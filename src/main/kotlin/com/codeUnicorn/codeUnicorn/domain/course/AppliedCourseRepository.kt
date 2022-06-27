@@ -10,4 +10,9 @@ interface AppliedCourseRepository : JpaRepository<AppliedCourse, Int> {
         @Param("userId") userId: Int,
         @Param("courseId") courseId: Int,
     ): Int
+
+    @Query("select id, user_id, course_id, created_at from applied_course where user_id = :userId", nativeQuery = true)
+    fun findByUserId(
+        @Param("userId") userId: Int
+    ): MutableList<AppliedCourse?>
 }

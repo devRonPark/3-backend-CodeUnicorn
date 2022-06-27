@@ -25,4 +25,9 @@ interface UserRepository : JpaRepository<User, Int> {
     @Modifying
     @Query("update user set profile_path = :profilePath, updated_at = :updatedAt where id = :id", nativeQuery = true)
     fun updateProfile(@Param("id") id: Int, @Param("profilePath") profilePath: String, @Param("updatedAt") updatedAt: LocalDateTime): Int?
+
+    @Transactional
+    @Modifying
+    @Query("update user set deleted_at = :deletedAt where id = :id", nativeQuery = true)
+    fun deleteUser(@Param("id") id: Int, @Param("deletedAt") deletedAt: LocalDateTime): Int?
 }

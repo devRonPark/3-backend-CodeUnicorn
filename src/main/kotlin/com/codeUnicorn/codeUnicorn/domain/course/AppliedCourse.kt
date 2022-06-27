@@ -7,6 +7,7 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.OneToOne
 import javax.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 
@@ -20,8 +21,9 @@ class AppliedCourse(userId: Int, courseId: Int) {
     @Column(name = "user_id")
     var userId: Int? = userId
 
+    @OneToOne
     @Column(name = "course_id")
-    var courseId: Int? = courseId
+    var course: Course? = null
 
     @JsonIgnore
     @Column(name = "created_at")
