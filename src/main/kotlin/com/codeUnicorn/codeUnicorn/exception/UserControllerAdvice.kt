@@ -256,4 +256,20 @@ class UserControllerAdvice {
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
     }
+
+    @ExceptionHandler(value = [AppliedCourseAlreadyExistException::class])
+    fun handleAppliedCourseAlreadyExistException(
+        e: AppliedCourseAlreadyExistException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.CONFLICT.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+        }
+        // ResponseEntity
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse)
+    }
 }

@@ -15,4 +15,5 @@ object ExceptionMessage {
     const val LIKE_COURSE_ALREADY_EXIST = "이미 관심코스로 등록되었습니다."
     const val UPDATE_QUERY_FAIL = "업데이트 쿼리 요청이 실패했습니다."
     const val SELECT_QUERY_FAIL = "조회 쿼리 요청이 실패했습니다."
+    const val APPLIED_COURSE_ALREADY_EXIST = "이미 수강 중인 코스입니다."
 }

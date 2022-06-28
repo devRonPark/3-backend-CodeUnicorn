@@ -4,18 +4,18 @@ import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
 import com.codeUnicorn.codeUnicorn.exception.UserAccessForbiddenException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
-import org.springframework.core.annotation.Order
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.stereotype.Component
-import org.springframework.util.PatternMatchUtils
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import mu.KotlinLogging
+import org.springframework.core.annotation.Order
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
+import org.springframework.util.PatternMatchUtils
 
 private val log = KotlinLogging.logger {}
 
@@ -39,33 +39,32 @@ class LoginCheckFilter : Filter {
             if (isLoginCheckPath(requestURI)) {
                 log.info("인증 체크 로직 실행 {}", requestURI)
                 // 로그인 세션이 존재하면 세션 반환, 세션이 존재하지 않으면 null 값 반환
-                /*
                 val session = httpRequest.getSession(false)
-
-                // 현재 로그인하지 않은 사용자의 접근 시 401 Unauthorized 에러 발생
-                if (session?.getAttribute("user") == null) {
-                    log.info("미인증 사용자 요청 {}", requestURI)
-
-                    throw UserUnauthorizedException(ExceptionMessage.UNAUTHORIZED_USER_CANNOT_ACCESS)
-                }
-
-                val userInfoInSession: User? =
-                    jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
-
-                // userId 에 대한 유효성 검증 처리
-                if (requestURI.contains("/users")) {
-                    /*
-                        /users/{userId} || /users/{userId}/nickname || /users/{userId}/profile
-                        userId 가 숫자인 경우 true
-                    */
-                    val regex = "/users/(\\d+)/?\\w*".toRegex()
-
-                    // request URI 에 로그인한 사용자의 userId 가 포함되어 있지 않으면 403 Forbidden 에러 발생
-                    if (requestURI.matches(regex) && !requestURI.contains(userInfoInSession?.id.toString())) {
-                        throw UserAccessForbiddenException(ExceptionMessage.CURRENT_USER_CANNOT_ACCESS)
-                    }
-                }
-                 */
+                log.info { "session id: ${session.id}" }
+//
+//                // 현재 로그인하지 않은 사용자의 접근 시 401 Unauthorized 에러 발생
+//                if (session?.getAttribute("user") == null) {
+//                    log.info("미인증 사용자 요청 {}", requestURI)
+//
+//                    throw UserUnauthorizedException(ExceptionMessage.UNAUTHORIZED_USER_CANNOT_ACCESS)
+//                }
+//
+//                val userInfoInSession: User? =
+//                    jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
+//
+//                // userId 에 대한 유효성 검증 처리
+//                if (requestURI.contains("/users")) {
+//                    /*
+//                        /users/{userId} || /users/{userId}/nickname || /users/{userId}/profile
+//                        userId 가 숫자인 경우 true
+//                    */
+//                    val regex = "/users/(\\d+)/?\\w*".toRegex()
+//
+//                    // request URI 에 로그인한 사용자의 userId 가 포함되어 있지 않으면 403 Forbidden 에러 발생
+//                    if (requestURI.matches(regex) && !requestURI.contains(userInfoInSession?.id.toString())) {
+//                        throw UserAccessForbiddenException(ExceptionMessage.CURRENT_USER_CANNOT_ACCESS)
+//                    }
+//                }
             }
             chain?.doFilter(request, response)
         } catch (e: UserUnauthorizedException) {

@@ -2,6 +2,7 @@ package com.codeUnicorn.codeUnicorn.domain.lecture
 
 import com.codeUnicorn.codeUnicorn.domain.course.PlayTimeConverter
 import com.codeUnicorn.codeUnicorn.domain.section.SectionDetailInfo
+import com.fasterxml.jackson.annotation.JsonIgnore
 import javax.persistence.AttributeConverter
 import javax.persistence.Convert
 import javax.persistence.Converter
@@ -20,11 +21,10 @@ data class LectureDetailInfo(
     val id: Int? = null,
     var name: String,
     var description: String,
-    // @Column(length = 255, name = "video_url")
     var videoUrl: String,
-    // @Column(name = "play_time")
     var playTime: String,
 
+    @JsonIgnore
     @ManyToOne
     val section: SectionDetailInfo
 )

@@ -126,18 +126,18 @@ class UserService {
         val ip: String = this.getClientIp(request) // IPv4 형식의 주소
 
         // 로그인 로그 쌓기
-//        val userAccessLog =
-//            UserAccessLogDto(
-//                userInfoInDb.id ?: 0,
-//                BEHAVIOR_TYPE.LOGIN.toString(),
-//                ip,
-//                browserName,
-//                session.id
-//            )
+        val userAccessLog =
+            UserAccessLogDto(
+                userInfoInDb.id ?: 0,
+                BEHAVIOR_TYPE.LOGIN.toString(),
+                ip,
+                browserName,
+                session.id
+            )
 
-//        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
+        val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
 
-//        userAccessLogRepository.save(userAccessLogEntity)
+        userAccessLogRepository.save(userAccessLogEntity)
 
         return returnData
     }
@@ -262,7 +262,7 @@ class UserService {
         val deletedAt = LocalDateTime.now()
         // 사용자의 deleted_at 컬럼 값 업데이트
         try {
-            val affectedRow = userRepository.deleteUser(userId, deletedAt)
+            userRepository.deleteUser(userId, deletedAt)
         } catch (e: IOException) {
             throw MySQLException(ExceptionMessage.UPDATE_QUERY_FAIL)
         }
@@ -288,7 +288,7 @@ class UserService {
             appliedCourseInfo["courseId"] = it?.course?.id
             appliedCourseInfo["name"] = it?.course?.name
             appliedCourseInfo["imagePath"] = it?.course?.imagePath
-            appliedCourseInfo["createdAt"] = it?.createdAt
+            appliedCourseInfo["createdAt"] = it?.createdAt?.toLocalDate().toString().replace("-", ". ")
             // dayCount 계산
             val startDateTime = it?.createdAt?.toLocalDate() ?: LocalDateTime.now().toLocalDate()
             val currentDateTime = LocalDateTime.now().toLocalDate()

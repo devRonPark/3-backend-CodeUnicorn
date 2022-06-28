@@ -1,6 +1,8 @@
 package com.codeUnicorn.codeUnicorn.service
 
 import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
+import com.codeUnicorn.codeUnicorn.domain.course.AppliedCourse
+import com.codeUnicorn.codeUnicorn.domain.course.AppliedCourseRepository
 import com.codeUnicorn.codeUnicorn.domain.course.CourseDetail
 import com.codeUnicorn.codeUnicorn.domain.course.CourseDetailRepository
 import com.codeUnicorn.codeUnicorn.domain.course.CourseInfo
@@ -11,16 +13,20 @@ import com.codeUnicorn.codeUnicorn.domain.lecture.LectureDetailInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureRepository
 import com.codeUnicorn.codeUnicorn.domain.likeCourse.LikeCourseRepository
 import com.codeUnicorn.codeUnicorn.domain.user.User
+import com.codeUnicorn.codeUnicorn.dto.AppliedCourseDto
 import com.codeUnicorn.codeUnicorn.dto.CreateCourseLikeDto
+import com.codeUnicorn.codeUnicorn.exception.AppliedCourseAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.CurriculumNotExistException
 import com.codeUnicorn.codeUnicorn.exception.LikeCourseAlreadyExistException
+import com.codeUnicorn.codeUnicorn.exception.MySQLException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
+import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpSession
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpSession
 
 private val log = KotlinLogging.logger {}
 
@@ -41,6 +47,9 @@ class CourseService {
     @Autowired
     private lateinit var likeCourseRepository: LikeCourseRepository
 
+    @Autowired
+    private lateinit var appliedCourseRepository: AppliedCourseRepository
+
     // 코스 정보 조회
     fun getCourseList(category: String, paging: Int): List<CourseInfo>? {
         val categoryList = mapOf(
@@ -51,13 +60,11 @@ class CourseService {
             "algorithm" to "알고리즘",
             "database" to "데이터베이스"
         )
-        var courseInfoInDb: List<CourseInfo>? = null
-        var courseCount: Int = 0
 
-        if (category == "all") {
-            courseInfoInDb = courseRepository.findByAllCourse(paging) ?: return null
+        val courseInfoInDb = if (category == "all") {
+            courseRepository.findByAllCourse(paging)
         } else {
-            courseInfoInDb = courseRepository.findByCourse(categoryList[category] ?: "", paging) ?: return null
+            courseRepository.findByCourse(categoryList[category] ?: "", paging)
         }
 
         return courseInfoInDb
@@ -73,12 +80,11 @@ class CourseService {
             "algorithm" to "알고리즘",
             "database" to "데이터베이스"
         )
-        var courseCount = 0
 
-        if (category == "all") {
-            courseCount = courseRepository.findByAllCourseCount()
+        val courseCount = if (category == "all") {
+            courseRepository.findByAllCourseCount()
         } else {
-            courseCount = courseRepository.findByCourseCount(categoryList[category] ?: "")
+            courseRepository.findByCourseCount(categoryList[category] ?: "")
         }
 
         return courseCount
@@ -104,10 +110,20 @@ class CourseService {
         return lectureInfo
     }
 
+    // 코스 커리큘럼 조회
     @Throws(CurriculumNotExistException::class)
-    fun getCurriculumInfo(courseId: Int): List<SectionInfo> {
-        return curriculumInfoRepository.findByCourseId(courseId)
-            ?: throw CurriculumNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+    fun getCurriculumInfo(courseId: Int): List<SectionInfo?> {
+        val curriculumInfo: List<SectionInfo?>
+        try {
+            curriculumInfo = curriculumInfoRepository.findByCourseId(courseId)
+        } catch (e: RuntimeException) {
+            throw MySQLException(ExceptionMessage.SELECT_QUERY_FAIL)
+        }
+
+        if (curriculumInfo.isEmpty()) {
+            throw CurriculumNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        }
+        return curriculumInfo
     }
 
     // 모든 강의 정보 조회
@@ -117,7 +133,6 @@ class CourseService {
 
     // 관심 코스 등록
     fun postCourseLike(request: HttpServletRequest, courseId: Int) {
-
         val session: HttpSession = request.getSession(false)
             ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
 
@@ -143,5 +158,37 @@ class CourseService {
 
         val likeCourse = newCourseLikeDto.toEntity()
         likeCourseRepository.save(likeCourse)
+    }
+
+    // 사용자의 코스 신청
+    @Throws(AppliedCourseAlreadyExistException::class)
+    fun applyCourse(courseId: Int, request: HttpServletRequest): AppliedCourse? {
+        val session: HttpSession? = request.getSession(false)
+        log.info { "session: $session" }
+        log.info { "session id: ${session?.id ?: "존재하지 않음"}" }
+        // 세션 가져오기
+        // 세션이 존재하지 않는 경우 예외 발생(401, 로그인한 사용자만 접근 가능)
+        if (session == null) {
+            throw UserUnauthorizedException(ExceptionMessage.UNAUTHORIZED_USER_CANNOT_ACCESS)
+        }
+
+        val userInfoInSession: User =
+            jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
+
+        // userId 가 세션 안에 존재하지 않는다면 로그인하지 않았다는 의미
+        val userId = userInfoInSession.id
+            ?: throw UserUnauthorizedException(ExceptionMessage.UNAUTHORIZED_USER_CANNOT_ACCESS)
+
+        // 사용자 코스 신청 정보 전 기존 신청 여부 검증
+        val isCourseAlreadyApplied = appliedCourseRepository.isAlreadyExist(userId, courseId)?.toInt() == 1
+        if (isCourseAlreadyApplied) {
+            throw AppliedCourseAlreadyExistException(ExceptionMessage.APPLIED_COURSE_ALREADY_EXIST)
+        }
+        // 사용자 코스 신청 정보 저장
+        val appliedCourse = AppliedCourseDto(userId, courseId).toEntity()
+        // 사용자 코스 신청 기록 저장
+        val savedAppliedCourse = appliedCourseRepository.save(appliedCourse)
+        log.info { "신청된 코스 정보 : $savedAppliedCourse" }
+        return savedAppliedCourse
     }
 }

@@ -42,6 +42,7 @@ dependencies { // 프로젝트에 필요한 라이브러리 관리
     implementation("org.codehaus.janino:janino")
     implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
     implementation("com.github.maricn:logback-slack-appender:1.4.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java") // MySQL
