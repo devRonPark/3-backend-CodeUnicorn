@@ -58,11 +58,11 @@ class CourseService {
 
     // 코스 정보 조회
     @Throws(CourseNotExistException::class)
-    fun getCourseList(category: String?, sortBy: String?, page: String): List<CourseInfo?> {
-        val paging = if (page.toInt() == 1 || page.toInt() == 0) {
+    fun getCourseList(category: String?, sortBy: String?, page: Int): List<CourseInfo?> {
+        val paging = if (page == 1 || page == 0) {
             0
         } else {
-            (page.toInt() - 1) * 9
+            (page - 1) * 9
         }
         val categoryList = mapOf(
             "all" to "전체",

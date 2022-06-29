@@ -3,6 +3,9 @@ package com.codeUnicorn.codeUnicorn.controller
 import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.service.CourseService
+import javax.servlet.http.HttpServletRequest
+import javax.validation.constraints.NotNull
+import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -14,8 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import javax.servlet.http.HttpServletRequest
-import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
@@ -31,15 +32,16 @@ class CourseApiController {
     // 코스 정보 조회
     @GetMapping()
     fun getCourseList(
-        @RequestParam(required = true) category: String,
-        @RequestParam(value = "sortby", required = true) sortBy: String,
+        @RequestParam(required = true) category: String?,
+        @RequestParam(value = "sortby", required = true) sortBy: String?,
         @RequestParam(required = true)
+        @NotNull(message = "page 값이 누락되었습니다.")
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "page는 숫자만 가능합니다.")
-        page: String
+        page: String?
     ): ResponseEntity<Any> {
         val courseInfo = HashMap<String, Any>()
 
-        val courseList = courseService.getCourseList(category, sortBy, page)
+        val courseList = courseService.getCourseList(category, sortBy, Integer.parseInt(page) ?: 0)
         val courseListInfo = courseList?.toTypedArray()
         courseListInfo?.let { courseInfo.put("courses", it) }
 
