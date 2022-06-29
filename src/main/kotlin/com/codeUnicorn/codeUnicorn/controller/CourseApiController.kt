@@ -3,8 +3,6 @@ package com.codeUnicorn.codeUnicorn.controller
 import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.service.CourseService
-import javax.servlet.http.HttpServletRequest
-import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -16,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.servlet.http.HttpServletRequest
+import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
@@ -136,10 +136,6 @@ class CourseApiController {
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "courseId는 숫자만 가능합니다.")
         courseId: String
     ): ResponseEntity<Any> {
-
-        println("API까지 접속")
-        println(courseId)
-        // println(request.session)
 
         val courseIdToInt = courseId.toInt()
 

@@ -8,6 +8,7 @@ import com.codeUnicorn.codeUnicorn.domain.course.CourseDetailRepository
 import com.codeUnicorn.codeUnicorn.domain.course.CourseInfo
 import com.codeUnicorn.codeUnicorn.domain.course.CourseInfoRepository
 import com.codeUnicorn.codeUnicorn.domain.course.CurriculumInfoRepository
+import com.codeUnicorn.codeUnicorn.domain.course.LikeCourseUpdateRepository
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureDetailInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureRepository
@@ -22,11 +23,11 @@ import com.codeUnicorn.codeUnicorn.exception.MySQLException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpSession
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpSession
 
 private val log = KotlinLogging.logger {}
 
@@ -49,6 +50,9 @@ class CourseService {
 
     @Autowired
     private lateinit var appliedCourseRepository: AppliedCourseRepository
+
+    @Autowired
+    private lateinit var likeCourseUpdateRepository: LikeCourseUpdateRepository
 
     // 코스 정보 조회
     fun getCourseList(category: String, paging: Int): List<CourseInfo>? {
@@ -133,6 +137,7 @@ class CourseService {
 
     // 관심 코스 등록
     fun postCourseLike(request: HttpServletRequest, courseId: Int) {
+
         val session: HttpSession = request.getSession(false)
             ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
 
@@ -156,11 +161,12 @@ class CourseService {
             courseId
         )
 
+        likeCourseUpdateRepository.likeCountUpdate(courseId)
+
         val likeCourse = newCourseLikeDto.toEntity()
         likeCourseRepository.save(likeCourse)
     }
 
-    // 사용자의 코스 신청
     @Throws(AppliedCourseAlreadyExistException::class)
     fun applyCourse(courseId: Int, request: HttpServletRequest): AppliedCourse? {
         val session: HttpSession? = request.getSession(false)

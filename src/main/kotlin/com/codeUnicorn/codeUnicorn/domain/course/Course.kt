@@ -101,3 +101,12 @@ data class CourseDetail(
     val instructor: Instructor
 
 )
+
+@Entity
+@Table(name = "course")
+data class LikeCourseUpdate(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int?,
+    @Column(name = "like_count")
+    val likeCount: Int?,
+)

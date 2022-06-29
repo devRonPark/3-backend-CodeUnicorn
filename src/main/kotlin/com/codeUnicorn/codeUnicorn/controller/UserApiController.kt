@@ -10,12 +10,6 @@ import com.codeUnicorn.codeUnicorn.exception.NicknameOrProfileRequiredException
 import com.codeUnicorn.codeUnicorn.exception.NotSupportedContentTypeException
 import com.codeUnicorn.codeUnicorn.service.S3FileUploadService
 import com.codeUnicorn.codeUnicorn.service.UserService
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpSession
-import javax.validation.Valid
-import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -31,6 +25,12 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.multipart.MultipartHttpServletRequest
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpSession
+import javax.validation.Valid
+import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
@@ -198,5 +198,21 @@ class UserApiController { // 의존성 주입
     ): ResponseEntity<MutableList<MutableMap<String, Any?>>> {
         val courseList = userService.getAppliedList(Integer.parseInt(userId))
         return ResponseEntity.status(HttpStatus.OK).body(courseList)
+    }
+
+    // 사용자의 관심 코스 목록 조회
+    @GetMapping(path = ["/{userId}/like-courses"])
+    fun getLikeCourseList(
+        request: HttpServletRequest,
+        @PathVariable(value = "userId")
+        @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "userId는 숫자만 가능합니다.")
+        userId: String,
+    ): ResponseEntity<Any> {
+
+        val userIdToInt = userId.toInt()
+
+        val likeCourseList = userService.getLikeCourseList(userIdToInt)
+
+        return ResponseEntity.status(HttpStatus.OK).body(likeCourseList)
     }
 }

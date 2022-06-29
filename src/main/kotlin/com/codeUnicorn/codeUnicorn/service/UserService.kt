@@ -4,6 +4,7 @@ import com.codeUnicorn.codeUnicorn.constant.BEHAVIOR_TYPE
 import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.domain.course.AppliedCourse
 import com.codeUnicorn.codeUnicorn.domain.course.AppliedCourseRepository
+import com.codeUnicorn.codeUnicorn.domain.course.LikeCourseInfoRepository
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.domain.user.UserAccessLog
 import com.codeUnicorn.codeUnicorn.domain.user.UserAccessLogRepository
@@ -12,12 +13,18 @@ import com.codeUnicorn.codeUnicorn.dto.CreateUserDto
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UserAccessLogDto
 import com.codeUnicorn.codeUnicorn.exception.AppliedCourseNotExistException
+import com.codeUnicorn.codeUnicorn.exception.LikeCourseNotExistException
 import com.codeUnicorn.codeUnicorn.exception.MySQLException
 import com.codeUnicorn.codeUnicorn.exception.NicknameAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.Period
@@ -26,11 +33,6 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 import javax.transaction.Transactional
-import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.scheduling.annotation.Async
-import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
 
@@ -44,6 +46,9 @@ class UserService {
 
     @Autowired
     private lateinit var appliedCourseRepository: AppliedCourseRepository
+
+    @Autowired
+    private lateinit var likeCourseInfoRepository: LikeCourseInfoRepository
 
     @Async
     @Throws(UserNotExistException::class)
@@ -249,9 +254,11 @@ class UserService {
     fun updateUserProfile(userId: Int, profilePath: String): CompletableFuture<Int?> {
         val updatedAt = LocalDateTime.now()
         val userProfileUpdateFuture = CompletableFuture.supplyAsync(fun(): Int? {
+            log.info { "(서비스) : 프로필 이미지 경로 사용자 정보 업데이트 쿼리 날림" }
             return userRepository.updateProfile(userId, profilePath, updatedAt)
         })
         val userProfileUpdateResult = userProfileUpdateFuture.join()
+        log.info { "(서비스) : 프로필 이미지 경로 사용자 정보 업데이트 완료" }
         return CompletableFuture.completedFuture(userProfileUpdateResult)
     }
 
@@ -302,5 +309,40 @@ class UserService {
         })
 
         return responseData
+    }
+
+    // 사용자의 관심 코스 목록 조회
+    fun getLikeCourseList(userId: Int): HashMap<String, Any?> {
+
+        val likeCourseList = likeCourseInfoRepository.findByLikeCourseList(userId)
+
+        if (likeCourseList.isEmpty()) {
+            throw LikeCourseNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        }
+
+        val likeCourseCount = likeCourseInfoRepository.findByLikeCourseCount(userId)
+
+        val likeCourseResponse = HashMap<String, Any?>()
+
+        val likeCourseData = mutableListOf<MutableMap<String, Any?>>()
+
+        for (i in likeCourseList.indices) {
+            val likeCourse = mutableMapOf<String, Any?>()
+            likeCourse["id"] = likeCourseList[i].likeCourseList.id
+            likeCourse["category"] = likeCourseList[i].likeCourseList.category
+            likeCourse["type"] = likeCourseList[i].likeCourseList.type
+            likeCourse["name"] = likeCourseList[i].likeCourseList.name
+            likeCourse["imagePath"] = likeCourseList[i].likeCourseList.imagePath
+            likeCourse["averageRatings"] = likeCourseList[i].likeCourseList.averageRatings
+            likeCourse["ratingsCount"] = likeCourseList[i].likeCourseList.ratingsCount
+            likeCourse["userCount"] = likeCourseList[i].likeCourseList.userCount
+
+            likeCourseData.add(likeCourse)
+        }
+
+        likeCourseResponse["courses"] = likeCourseData
+        likeCourseResponse["courseCount"] = likeCourseCount
+
+        return likeCourseResponse
     }
 }
