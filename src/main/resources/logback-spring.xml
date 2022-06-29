@@ -7,7 +7,8 @@
     </springProfile>
     <springProfile name="dev">
         <!-- 로그 파일을 적재할 디렉토리 경로를 지정 -->
-        <property name="LOG_FILE_PATH" value="/var/codeUnicorn_log/codeUnicorn_log/dev"/>
+        <!--        <property name="LOG_FILE_PATH" value="/var/codeUnicorn_log/codeUnicorn_log/dev"/>-->
+        <property name="LOG_FILE_PATH" value="/Users/a1234/Desktop/codeUnicorn_log/dev"/>
         <!-- 로그 파일을 적재할 로그 파일 이름을 지정 -->
         <property name="LOG_FILE_NAME" value="dev_log"/>
         <!-- 로그 파일을 적재할 에러 로그 파일 이름을 지정 -->
@@ -52,6 +53,7 @@
                 <!-- INFO 레벨 이상의 로그만 저장 -->
                 <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                     <level>INFO</level>
+                    <!-- <onMatch></onMatch> -->
                 </filter>
                 <file>${LOG_FILE_PATH}/${LOG_FILE_NAME}.log</file>
                 <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -61,6 +63,32 @@
                 <rollingPolicy
                     class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <fileNamePattern>${LOG_FILE_PATH}/${LOG_FILE_NAME}_%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+                    <!-- 로그파일의 크기가 너무 커지는 것을 방지하기 위한 옵션 -->
+                    <!-- 100MB를 초과하면 로그 파일 분할 -->
+                    <timeBasedFileNamingAndTriggeringPolicy
+                        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>100MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                    <!-- 일자별 백업파일의 보관기간을 얼마로 정할 것인가에 대한 옵션 -->
+                    <maxHistory>7</maxHistory>
+                    <!-- 전체 파일 크기를 제어하며, 전체 크기 제한을 초과하면 가장 오래된 파일 삭제 -->
+                    <totalSizeCap>1GB</totalSizeCap>
+                </rollingPolicy>
+            </appender>
+            <appender name="Course" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!-- INFO 레벨 이상의 로그만 저장 -->
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>INFO</level>
+                </filter>
+                <file>${LOG_FILE_PATH}/${LOG_FILE_NAME}_COURSE_API.log</file>
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <pattern>${LOG_PATTERN}</pattern>
+                </encoder>
+                <!-- 일자별로 로그파일 적용 -->
+                <rollingPolicy
+                    class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${LOG_FILE_PATH}/${LOG_FILE_NAME}_COURSE_API_%d{yyyy-MM-dd}_%i.log
+                    </fileNamePattern>
                     <!-- 로그파일의 크기가 너무 커지는 것을 방지하기 위한 옵션 -->
                     <!-- 100MB를 초과하면 로그 파일 분할 -->
                     <timeBasedFileNamingAndTriggeringPolicy
@@ -108,6 +136,7 @@
     <logger name="jdbc.resultset" level="OFF" appender-ref="FILE"/>
     <logger name="jdbc.resultsettable" level="INFO" appender-ref="FILE"/>
     <logger name="jdbc.connection" level="OFF" appender-ref="FILE"/>
+    <logger name="com.codeUnicorn.codeUnicorn.controller.CourseApiController" level="INFO" appender-ref="Course"/>
 
     <root level="${LOG_LEVEL}">
         <springProfile name="local">
@@ -115,6 +144,7 @@
         </springProfile>
         <if condition='!"${spring.profiles.active}".contains("local")'>
             <then>
+                <appender-ref ref="CONSOLE"/>
                 <appender-ref ref="FILE"/>
                 <appender-ref ref="ERROR_FILE"/>
             </then>

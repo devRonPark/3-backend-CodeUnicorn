@@ -22,30 +22,28 @@ private val log = KotlinLogging.logger {}
 @RestController
 @RequestMapping("/courses")
 @Validated
-
 class CourseApiController {
     @Autowired
     private lateinit var courseService: CourseService
 
+    // /courses?category=""&page=1
+    // 정렬 기준: 인기순(popular), 최신순(new)
     // 코스 정보 조회
     @GetMapping()
-    fun GetCourseList(
-        @RequestParam category: String,
-        @RequestParam page: Int
+    fun getCourseList(
+        @RequestParam(required = true) category: String,
+        @RequestParam(value = "sortby", required = true) sortBy: String,
+        @RequestParam(required = true)
+        @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "page는 숫자만 가능합니다.")
+        page: String
     ): ResponseEntity<Any> {
-        val paging = if (page == 1 || page == 0) {
-            0
-        } else {
-            (page - 1) * 9
-        }
-
-        val courseList = courseService.getCourseList(category, paging)
-        val courseCount = courseService.getCourseCount(category)
-
-        val courseListInfo = courseList?.toTypedArray()
-
         val courseInfo = HashMap<String, Any>()
+
+        val courseList = courseService.getCourseList(category, sortBy, page)
+        val courseListInfo = courseList?.toTypedArray()
         courseListInfo?.let { courseInfo.put("courses", it) }
+
+        val courseCount = courseService.getCourseCount(category)
         courseInfo["courseCount"] = courseCount
 
         val successResponse = SuccessResponse(200, courseInfo)

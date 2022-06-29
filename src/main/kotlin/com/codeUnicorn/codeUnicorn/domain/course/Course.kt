@@ -70,7 +70,13 @@ data class CourseInfo(
     @Column(name = "ratings_count")
     var ratingsCount: Int,
     @Column(name = "user_count")
-    var userCount: Int?
+    var userCount: Int?,
+    @Column(name = "like_count")
+    val likeCount: Int,
+    @Column(name = "created_at")
+    @JsonSerialize(using = LocalDateTimeSerializer::class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer::class)
+    val createdAt: LocalDateTime
 )
 
 @Entity

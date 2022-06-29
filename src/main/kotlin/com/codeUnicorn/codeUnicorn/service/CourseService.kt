@@ -17,17 +17,19 @@ import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.dto.AppliedCourseDto
 import com.codeUnicorn.codeUnicorn.dto.CreateCourseLikeDto
 import com.codeUnicorn.codeUnicorn.exception.AppliedCourseAlreadyExistException
+import com.codeUnicorn.codeUnicorn.exception.CourseNotExistException
 import com.codeUnicorn.codeUnicorn.exception.CurriculumNotExistException
 import com.codeUnicorn.codeUnicorn.exception.LikeCourseAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.MySQLException
+import com.codeUnicorn.codeUnicorn.exception.RequestParamNotValidException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpSession
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpSession
 
 private val log = KotlinLogging.logger {}
 
@@ -55,8 +57,15 @@ class CourseService {
     private lateinit var likeCourseUpdateRepository: LikeCourseUpdateRepository
 
     // 코스 정보 조회
-    fun getCourseList(category: String, paging: Int): List<CourseInfo>? {
+    @Throws(CourseNotExistException::class)
+    fun getCourseList(category: String?, sortBy: String?, page: String): List<CourseInfo?> {
+        val paging = if (page.toInt() == 1 || page.toInt() == 0) {
+            0
+        } else {
+            (page.toInt() - 1) * 9
+        }
         val categoryList = mapOf(
+            "all" to "전체",
             "frontend" to "프론트엔드",
             "backend" to "백엔드",
             "mobile" to "모바일",
@@ -64,18 +73,53 @@ class CourseService {
             "algorithm" to "알고리즘",
             "database" to "데이터베이스"
         )
+        // category 값이 누락되었다면
+        if (category == null) {
+            throw RequestParamNotValidException(ExceptionMessage.CATEGORY_IS_REQUIRED)
+            // sortBy 값이 누락되었다면
+        } else if (sortBy == null) {
+            throw RequestParamNotValidException(ExceptionMessage.SORTBY_IS_REQUIRED)
+        }
+        // category는 무조건 categoryList 의 key 값 중 하나여야 한다.
+        else if (!categoryList.containsKey(category)) {
+            // 잘못된 category 값입니다. 400 예외 발생
+            throw RequestParamNotValidException(ExceptionMessage.CATEGORY_IS_INVALID)
+            // sortBy 는 무조건 popular 혹은 new 둘 중 하나여야 한다.
+        } else if (sortBy != "popular" && sortBy != "new") {
+            // 잘못된 sortBy 값입니다. 400 예외 발생
+            throw RequestParamNotValidException(ExceptionMessage.SORTBY_IS_INVALID)
+        }
 
-        val courseInfoInDb = if (category == "all") {
-            courseRepository.findByAllCourse(paging)
-        } else {
-            courseRepository.findByCourse(categoryList[category] ?: "", paging)
+        var courseInfoInDb: List<CourseInfo?> = listOf()
+        if (category == "all") {
+            if (sortBy == "popular") {
+                courseInfoInDb = courseRepository.findSortedByPopularAllCourseList(paging)
+            } else if (sortBy == "new") {
+                courseInfoInDb = courseRepository.findSortedByNewAllCourseList(paging)
+            }
+        } else if (categoryList.containsKey(category)) {
+            if (sortBy == "popular") { // 인기순
+                courseInfoInDb = courseRepository.findSortedByPopularCategorizedCourseList(
+                    categoryList[category] ?: "",
+                    paging
+                )
+            } else if (sortBy == "new") { // 최신순
+                courseInfoInDb = courseRepository.findSortedByNewCategorizedCourseList(
+                    categoryList[category] ?: "",
+                    paging
+                )
+            }
+        }
+        // 코스 데이터가 존재하지 않을 경우 404 Not Found
+        if (courseInfoInDb.isEmpty()) {
+            throw CourseNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
         }
 
         return courseInfoInDb
     }
 
     // 코스 전체 개수 조회
-    fun getCourseCount(category: String): Int {
+    fun getCourseCount(category: String?): Int {
         val categoryList = mapOf(
             "frontend" to "프론트엔드",
             "backend" to "백엔드",

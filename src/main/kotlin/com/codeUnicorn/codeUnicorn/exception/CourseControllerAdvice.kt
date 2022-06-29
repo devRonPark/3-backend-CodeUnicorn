@@ -3,15 +3,15 @@ package com.codeUnicorn.codeUnicorn.exception
 import com.codeUnicorn.codeUnicorn.controller.CourseApiController
 import com.codeUnicorn.codeUnicorn.domain.Error
 import com.codeUnicorn.codeUnicorn.domain.ErrorResponse
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
+import javax.validation.ConstraintViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletRequest
-import javax.validation.ConstraintViolationException
 
 @RestControllerAdvice(basePackageClasses = [CourseApiController::class])
 class CourseControllerAdvice {
@@ -99,5 +99,38 @@ class CourseControllerAdvice {
             this.timestamp = LocalDateTime.now()
         }
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse)
+    }
+
+    // 잘못된 쿼리 값이 들어오는 경우 발생
+    @ExceptionHandler(value = [RequestParamNotValidException::class])
+    fun handleRequestParamWrongException(
+        e: RequestParamNotValidException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.BAD_REQUEST.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+            this.timestamp = LocalDateTime.now()
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+    }
+
+    // 코스 데이터가 존재하지 않는 경우 발생
+    @ExceptionHandler(value = [CourseNotExistException::class])
+    fun handleCourseNotExistException(
+        e: CourseNotExistException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> { // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.NOT_FOUND.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+            this.timestamp = LocalDateTime.now()
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
     }
 }

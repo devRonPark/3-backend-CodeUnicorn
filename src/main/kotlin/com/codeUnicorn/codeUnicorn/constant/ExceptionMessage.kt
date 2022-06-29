@@ -16,4 +16,8 @@ object ExceptionMessage {
     const val UPDATE_QUERY_FAIL = "업데이트 쿼리 요청이 실패했습니다."
     const val SELECT_QUERY_FAIL = "조회 쿼리 요청이 실패했습니다."
     const val APPLIED_COURSE_ALREADY_EXIST = "이미 수강 중인 코스입니다."
+    const val CATEGORY_IS_INVALID = "잘못된 category 값입니다."
+    const val SORTBY_IS_INVALID = "잘못된 sortBy 값입니다."
+    const val CATEGORY_IS_REQUIRED = "category 값이 누락되었습니다."
+    const val SORTBY_IS_REQUIRED = "sortby 값이 누락되었습니다."
 }

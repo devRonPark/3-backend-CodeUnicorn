@@ -12,15 +12,15 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     // 전체 코스 정보 조회(페이징)
     @Transactional
     @Query(value = "select * from course limit :paging, 9", nativeQuery = true)
-    fun findByAllCourse(@Param("paging") paging: Int): List<CourseInfo>
+    fun findByAllCourse(@Param("paging") paging: Int): List<CourseInfo?>
 
     // 특정 코스 정보 조회(페이징)
     @Transactional
     @Query(
-        value = "select * from course  where category = :category limit :paging, 9",
+        value = "select * from course where category = :category limit :paging, 9",
         nativeQuery = true
     )
-    fun findByCourse(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo>?
+    fun findByCourse(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo?>
 
     // 전체 코스 갯수
     @Transactional
@@ -36,4 +36,30 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     @Transactional
     @Query(value = "select * from course", nativeQuery = true)
     fun findByAllCourseList(): List<CourseInfo>
+
+    // 인기 순 코스 목록 조회
+    @Transactional
+    @Query(value = "select * from course order by like_count desc limit :paging, 9", nativeQuery = true)
+    fun findSortedByPopularCourseList(@Param("paging") page: Int): List<CourseInfo?>
+
+    @Transactional
+    @Query(value = "select * from course order by like_count desc limit :paging, 9", nativeQuery = true)
+    fun findSortedByPopularAllCourseList(@Param("paging") page: Int): List<CourseInfo?>
+
+    @Transactional
+    @Query(value = "select * from course where category = :category order by like_count desc limit :paging, 9", nativeQuery = true)
+    fun findSortedByPopularCategorizedCourseList(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo?>
+
+    // 최신 순 코스 목록 조회
+    @Transactional
+    @Query(value = "select * from course order by created_at desc limit :paging, 9", nativeQuery = true)
+    fun findSortedByNewCourseList(@Param("paging") page: Int): List<CourseInfo?>
+
+    @Transactional
+    @Query(value = "select * from course order by created_at desc limit :paging, 9", nativeQuery = true)
+    fun findSortedByNewAllCourseList(@Param("paging") page: Int): List<CourseInfo?>
+
+    @Transactional
+    @Query(value = "select * from course where category = :category order by created_at desc limit :paging, 9", nativeQuery = true)
+    fun findSortedByNewCategorizedCourseList(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo?>
 }
