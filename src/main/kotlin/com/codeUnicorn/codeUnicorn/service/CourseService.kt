@@ -8,6 +8,7 @@ import com.codeUnicorn.codeUnicorn.domain.course.CourseDetailRepository
 import com.codeUnicorn.codeUnicorn.domain.course.CourseInfo
 import com.codeUnicorn.codeUnicorn.domain.course.CourseInfoRepository
 import com.codeUnicorn.codeUnicorn.domain.course.CurriculumInfoRepository
+import com.codeUnicorn.codeUnicorn.domain.course.LikeCourseDeleteRepository
 import com.codeUnicorn.codeUnicorn.domain.course.LikeCourseUpdateRepository
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureDetailInfo
@@ -25,11 +26,12 @@ import com.codeUnicorn.codeUnicorn.exception.RequestParamNotValidException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpSession
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpSession
 
 private val log = KotlinLogging.logger {}
 
@@ -55,6 +57,9 @@ class CourseService {
 
     @Autowired
     private lateinit var likeCourseUpdateRepository: LikeCourseUpdateRepository
+
+    @Autowired
+    private lateinit var likeCourseDeleteRepository: LikeCourseDeleteRepository
 
     // 코스 정보 조회
     @Throws(CourseNotExistException::class)
@@ -240,5 +245,23 @@ class CourseService {
         val savedAppliedCourse = appliedCourseRepository.save(appliedCourse)
         log.info { "신청된 코스 정보 : $savedAppliedCourse" }
         return savedAppliedCourse
+    }
+
+    // 관심 교욱 목록 삭제
+    fun deleteLikeCourse(request: HttpServletRequest, courseId: Int) {
+
+        val session: HttpSession = request.getSession(false)
+            ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
+
+        // 세션 속 저장되어 있는 사용자 정보 가져오기
+        val userInfoInSession: User =
+            jacksonObjectMapper().readValue(session.getAttribute("user").toString(), User::class.java)
+
+        // 세션 속 저장되어 있는 사용자 indexId 변수에 할당
+        val userId = userInfoInSession.id
+
+        val deletedAt = LocalDateTime.now()
+
+        likeCourseDeleteRepository.deleteByLikeCourse(deletedAt, userId, courseId)
     }
 }

@@ -3,26 +3,28 @@ package com.codeUnicorn.codeUnicorn.controller
 import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.service.CourseService
-import javax.servlet.http.HttpServletRequest
-import javax.validation.constraints.NotNull
-import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.servlet.http.HttpServletRequest
+import javax.validation.constraints.NotNull
+import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping("/courses")
 @Validated
+
 class CourseApiController {
     @Autowired
     private lateinit var courseService: CourseService
@@ -130,7 +132,7 @@ class CourseApiController {
     }
 
     @PostMapping(path = ["/{courseId}/likes"])
-    fun postCourseLikie(
+    fun postCourseLike(
         request: HttpServletRequest,
         @PathVariable(value = "courseId")
         @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "courseId는 숫자만 가능합니다.")
@@ -153,5 +155,18 @@ class CourseApiController {
     ): ResponseEntity<SuccessResponse?> {
         courseService.applyCourse(Integer.parseInt(courseId), request)
         return ResponseEntity.status(HttpStatus.CREATED).body(null)
+    }
+
+    @DeleteMapping(path = ["{courseId}/likes"])
+    fun deleteCourseLike(
+        request: HttpServletRequest,
+        @PathVariable(value = "courseId")
+        @Pattern(regexp = "^(0|[1-9][0-9]*)$", message = "courseId는 숫자만 가능합니다.")
+        courseId: String
+    ): ResponseEntity<Any> {
+
+        courseService.deleteLikeCourse(request, Integer.parseInt(courseId))
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null)
     }
 }

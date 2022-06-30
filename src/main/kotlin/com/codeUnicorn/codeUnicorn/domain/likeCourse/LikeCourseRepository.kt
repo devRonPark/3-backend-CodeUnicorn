@@ -8,6 +8,9 @@ import org.springframework.transaction.annotation.Transactional
 interface LikeCourseRepository : JpaRepository<LikeCourse, Int> {
 
     @Transactional
-    @Query(value = "select * from like_course where user_id = :userId and course_id = :courseId", nativeQuery = true)
+    @Query(
+        value = "select * from like_course where deleted_at IS NULL and user_id = :userId and course_id = :courseId",
+        nativeQuery = true
+    )
     fun findByLikeCourse(@Param("userId") userId: Int?, @Param("courseId") courseId: Int): LikeCourse?
 }
