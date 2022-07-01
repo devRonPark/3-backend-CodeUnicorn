@@ -40,16 +40,16 @@ class LoginCheckFilter : Filter {
     // Regex("/courses/(\\w|\\d|\\s)*/likes")
     private val authRouteObj = mapOf(
         "GET" to listOf(
-            Regex("^/users/(\\w|\\d|\\s)*/?(like-courses|apply-courses)?"),
-            Regex("/courses/(\\w|\\d|\\s)*/lectures/(\\w|\\d|\\s)*")
+            Regex("^/users/(?!all)[\\w\\d\\s]*/?(like-courses|apply-courses)?"),
+            Regex("^/courses/(\\w|\\d|\\s)*/lectures/(\\w|\\d|\\s)*")
         ),
         "POST" to listOf(
-            Regex("/courses/(\\w|\\d|\\s)*/(apply|likes)?"),
+            Regex("^/courses/(\\w|\\d|\\s)*/(apply|likes)?"),
             Regex("^/users/(\\w|\\d|\\s)*/info"),
         ),
         "DELETE" to listOf(
             Regex("^/users/(\\w|\\d|\\s)*/?(logout)?"),
-            Regex("/courses/(\\w|\\d|\\s)*/likes")
+            Regex("^/courses/(\\w|\\d|\\s)*/likes")
         )
     )
 
