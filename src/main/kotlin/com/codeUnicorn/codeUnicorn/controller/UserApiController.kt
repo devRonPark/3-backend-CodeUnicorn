@@ -67,7 +67,7 @@ class UserApiController { // 의존성 주입
 
     // 모든 사용자 정보 조회 API
     @GetMapping(path = ["/all"])
-    fun getUserInfoList(): ResponseEntity<MutableList<User>> {
+    fun getUserInfoList(): ResponseEntity<MutableList<User?>> {
         val userInfoList = userService.getUserInfoList()
         return ResponseEntity.status(HttpStatus.OK).body(userInfoList)
     }

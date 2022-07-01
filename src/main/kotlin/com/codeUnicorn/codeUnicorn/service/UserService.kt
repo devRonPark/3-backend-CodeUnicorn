@@ -347,8 +347,8 @@ class UserService {
     }
 
     @Throws(UserNotExistException::class)
-    fun getUserInfoList(): MutableList<User> {
-        val userInfoList = userRepository.findAll()
+    fun getUserInfoList(): MutableList<User?> {
+        val userInfoList = userRepository.getUserInfoList()
         if (userInfoList.size == 0) throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
         return userInfoList
     }

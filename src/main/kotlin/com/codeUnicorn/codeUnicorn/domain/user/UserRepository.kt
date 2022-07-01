@@ -13,6 +13,10 @@ interface UserRepository : JpaRepository<User, Int> {
     fun findByEmail(email: String): User?
 
     @Transactional
+    @Query("select * from user where deleted_at is null", nativeQuery = true)
+    fun getUserInfoList(): MutableList<User?>
+
+    @Transactional
     @Modifying
     @Query("update user set nickname = :nickname, updated_at = :updatedAt where id = :id", nativeQuery = true)
     fun updateNickname(@Param("id") id: Int, @Param("nickname") nickname: String, @Param("updatedAt") updatedAt: LocalDateTime): Int?

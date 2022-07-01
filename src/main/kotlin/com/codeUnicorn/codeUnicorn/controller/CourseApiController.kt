@@ -3,6 +3,9 @@ package com.codeUnicorn.codeUnicorn.controller
 import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.service.CourseService
+import javax.servlet.http.HttpServletRequest
+import javax.validation.constraints.NotNull
+import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -15,9 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import javax.servlet.http.HttpServletRequest
-import javax.validation.constraints.NotNull
-import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
@@ -43,9 +43,9 @@ class CourseApiController {
     ): ResponseEntity<Any> {
         val courseInfo = HashMap<String, Any>()
 
-        val courseList = courseService.getCourseList(category, sortBy, Integer.parseInt(page) ?: 0)
-        val courseListInfo = courseList?.toTypedArray()
-        courseListInfo?.let { courseInfo.put("courses", it) }
+        val courseList = courseService.getCourseList(category, sortBy, Integer.parseInt(page))
+        val courseListInfo = courseList.toTypedArray()
+        courseListInfo.let { courseInfo.put("courses", it) }
 
         val courseCount = courseService.getCourseCount(category)
         courseInfo["courseCount"] = courseCount
