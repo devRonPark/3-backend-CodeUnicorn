@@ -20,11 +20,6 @@ import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.scheduling.annotation.Async
-import org.springframework.stereotype.Service
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.Period
@@ -33,6 +28,11 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 import javax.transaction.Transactional
+import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
 
@@ -344,5 +344,12 @@ class UserService {
         likeCourseResponse["courseCount"] = likeCourseCount
 
         return likeCourseResponse
+    }
+
+    @Throws(UserNotExistException::class)
+    fun getUserInfoList(): MutableList<User> {
+        val userInfoList = userRepository.findAll()
+        if (userInfoList.size == 0) throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        return userInfoList
     }
 }

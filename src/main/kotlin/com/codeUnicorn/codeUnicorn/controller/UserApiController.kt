@@ -10,6 +10,12 @@ import com.codeUnicorn.codeUnicorn.exception.NicknameOrProfileRequiredException
 import com.codeUnicorn.codeUnicorn.exception.NotSupportedContentTypeException
 import com.codeUnicorn.codeUnicorn.service.S3FileUploadService
 import com.codeUnicorn.codeUnicorn.service.UserService
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpSession
+import javax.validation.Valid
+import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -25,12 +31,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.multipart.MultipartHttpServletRequest
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpSession
-import javax.validation.Valid
-import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
@@ -63,6 +63,13 @@ class UserApiController { // 의존성 주입
 
         // 세션 정보 제공
         return ResponseEntity.status(HttpStatus.OK).body(session)
+    }
+
+    // 모든 사용자 정보 조회 API
+    @GetMapping(path = ["/all"])
+    fun getUserInfoList(): ResponseEntity<MutableList<User>> {
+        val userInfoList = userService.getUserInfoList()
+        return ResponseEntity.status(HttpStatus.OK).body(userInfoList)
     }
 
     // 사용자 정보 조회 API
