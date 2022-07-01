@@ -62,4 +62,8 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     @Transactional
     @Query(value = "select * from course where category = :category order by created_at desc limit :paging, 9", nativeQuery = true)
     fun findSortedByNewCategorizedCourseList(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo?>
+
+    @Transactional
+    @Query(value = "select * from course order by like_count desc limit 3", nativeQuery = true)
+    fun findTopThreeCourseList(): List<CourseInfo?>
 }

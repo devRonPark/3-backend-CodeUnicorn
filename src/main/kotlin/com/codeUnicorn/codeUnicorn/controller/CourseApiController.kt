@@ -1,6 +1,7 @@
 package com.codeUnicorn.codeUnicorn.controller
 
 import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
+import com.codeUnicorn.codeUnicorn.domain.course.CourseInfo
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.service.CourseService
 import javax.servlet.http.HttpServletRequest
@@ -168,5 +169,12 @@ class CourseApiController {
         courseService.deleteLikeCourse(request, Integer.parseInt(courseId))
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null)
+    }
+
+    // 좋아요 수를 기준으로 TOP3 의 코스 정보 조회
+    @GetMapping(path = ["/top/3"])
+    fun getTopThreeCourses(): ResponseEntity<List<CourseInfo?>> {
+        val topThreeCourses = courseService.getTopThreeCourses()
+        return ResponseEntity.status(HttpStatus.OK).body(topThreeCourses)
     }
 }

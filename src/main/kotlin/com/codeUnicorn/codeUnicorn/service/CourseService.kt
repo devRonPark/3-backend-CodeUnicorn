@@ -26,12 +26,13 @@ import com.codeUnicorn.codeUnicorn.exception.RequestParamNotValidException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import java.io.IOException
 import java.time.LocalDateTime
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpSession
+import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
 
@@ -263,5 +264,16 @@ class CourseService {
         val deletedAt = LocalDateTime.now()
 
         likeCourseDeleteRepository.deleteByLikeCourse(deletedAt, userId, courseId)
+    }
+
+    @Throws(MySQLException::class)
+    fun getTopThreeCourses(): List<CourseInfo?> {
+        var topThreeCourses: List<CourseInfo?>
+        try {
+            topThreeCourses = courseRepository.findTopThreeCourseList()
+        } catch (e: IOException) {
+            throw MySQLException(ExceptionMessage.SELECT_QUERY_FAIL)
+        }
+        return topThreeCourses
     }
 }
