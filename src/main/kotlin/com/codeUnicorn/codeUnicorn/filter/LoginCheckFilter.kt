@@ -41,7 +41,6 @@ class LoginCheckFilter : Filter {
     private val authRouteObj = mapOf(
         "GET" to listOf(
             Regex("^/users/(?!all)[\\w\\d\\s]*/?(like-courses|apply-courses)?"),
-            Regex("^/courses/(\\w|\\d|\\s)*/lectures/(\\w|\\d|\\s)*")
         ),
         "POST" to listOf(
             Regex("^/courses/(\\w|\\d|\\s)*/(apply|likes)?"),
