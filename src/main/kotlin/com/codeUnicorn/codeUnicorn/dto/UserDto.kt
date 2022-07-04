@@ -12,13 +12,12 @@ data class RequestUserDto(
         message = "이메일 형식에 어긋납니다."
     )
     var email: String,
-    @field: NotBlank(message = "닉네임이 누락되었습니다.")
     @field: Size(
         min = 1,
         max = 60,
         message = "닉네임은 1 ~ 60자 이어야 합니다.",
     )
-    var nickname: String,
+    var nickname: String?,
 )
 
 data class UpdateNicknameUserDto(
