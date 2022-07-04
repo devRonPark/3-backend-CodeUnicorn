@@ -32,8 +32,6 @@ class LoginCheckFilter : Filter {
     // DELETE /users/logout, /users/{userId}
     // Regex("^/users/(\\w|\\d|\\s)*/?(logout)?")
     // Courses
-    // GET /courses/{courseId}/lectures/{lectureId}
-    // Regex("/courses/(\\w|\\d|\\s)*/lectures/(\\w|\\d|\\s)*")
     // POST /courses/{courseId}/apply, /courses/{courseId}/likes
     // Regex("/courses/(\\w|\\d|\\s)*/(apply|likes)?")
     // DELETE /courses/{courseId}/likes
@@ -44,7 +42,7 @@ class LoginCheckFilter : Filter {
         ),
         "POST" to listOf(
             Regex("^/courses/(\\w|\\d|\\s)*/(apply|likes)?"),
-            Regex("^/users/(\\w|\\d|\\s)*/info"),
+//            Regex("^/users/(\\w|\\d|\\s)*/info"),
         ),
         "DELETE" to listOf(
             Regex("^/users/(\\w|\\d|\\s)*/?(logout)?"),
