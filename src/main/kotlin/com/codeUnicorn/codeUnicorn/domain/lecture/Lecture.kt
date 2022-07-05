@@ -4,6 +4,7 @@ import com.codeUnicorn.codeUnicorn.domain.course.PlayTimeConverter
 import com.codeUnicorn.codeUnicorn.domain.section.SectionDetailInfo
 import com.fasterxml.jackson.annotation.JsonIgnore
 import javax.persistence.AttributeConverter
+import javax.persistence.Column
 import javax.persistence.Convert
 import javax.persistence.Converter
 import javax.persistence.Entity
@@ -21,7 +22,10 @@ data class LectureDetailInfo(
     val id: Int? = null,
     var name: String,
     var description: String,
-    var videoUrl: String,
+    @Column(name = "dash_url")
+    var dashUrl: String,
+    @Column(name = "hls_url")
+    var hlsUrl: String,
     var playTime: String,
 
     @JsonIgnore

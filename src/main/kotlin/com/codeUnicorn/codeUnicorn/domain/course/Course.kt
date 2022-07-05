@@ -95,11 +95,13 @@ data class CourseDetail(
     @Column(name = "image_path")
     var imagePath: String?,
     @Column(name = "average_ratings")
-    var averageRatings: Int?,
+    var averageRatings: Int,
     @Column(name = "ratings_count")
     var ratingsCount: Int,
     @Column(name = "user_count")
-    var userCount: Int?,
+    var userCount: Int,
+    @Column(name = "like_count")
+    var likeCount: Int,
     @Column(name = "total_hours")
     var totalHours: String,
 

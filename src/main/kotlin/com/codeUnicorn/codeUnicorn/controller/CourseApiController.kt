@@ -106,7 +106,10 @@ class CourseApiController {
         lecture.id?.let { lectureEdit.put("id", it) }
         lectureEdit["name"] = lecture.name
         lectureEdit["desc"] = lecture.description
-        lectureEdit["videoUrl"] = lecture.videoUrl
+        // Safari 아닌 다른 브라우저 전용 영상 스트리밍 URl
+        lectureEdit["dashUrl"] = lecture.dashUrl
+        // Safari 브라우저 전용 영상 스트리밍 URl
+        lectureEdit["hlsUrl"] = lecture.hlsUrl
         lectureEdit["playTime"] = lecture.playTime
 
         lectureInfo["sectionId"] = lecture.section.sectionId
