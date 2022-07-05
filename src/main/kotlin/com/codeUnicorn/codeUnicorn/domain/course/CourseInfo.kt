@@ -31,7 +31,7 @@ class SectionInfo(val name: String, val totalHours: String, val lectureCount: In
 @Entity
 @Table(name = "lecture")
 @Convert(converter = PlayTimeConverter::class, attributeName = "playTime")
-class LectureInfo(val name: String, val description: String, val videoUrl: String, var playTime: String = "") {
+class LectureInfo(val name: String, val description: String, var playTime: String = "") {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int? = null
@@ -39,6 +39,12 @@ class LectureInfo(val name: String, val description: String, val videoUrl: Strin
     @Column(name = "course_id")
     @JsonIgnore
     val courseId: Int? = null
+
+    @Column(name = "hls_url")
+    val hlsUrl: String = ""
+
+    @Column(name = "dash_url")
+    val dashUrl: String = ""
 
     @Column(name = "section_id")
     @JsonIgnore

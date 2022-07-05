@@ -38,12 +38,14 @@ data class Course(
     var viewCount: Int? = 0,
     @Column(name = "total_hours")
     var totalHours: Int? = 0,
-    // @Column(name = "lecture_count")
+    @Column(name = "lecture_count")
     var lectureCount: Int? = 0,
     @Column(name = "average_ratings")
     var averageRatings: Int? = 0,
     @Column(name = "user_count")
     var userCount: Int? = 0,
+    @Column(name = "like_count")
+    val likeCount: Int,
     @Column(name = "created_at")
     @JsonSerialize(using = LocalDateTimeSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
