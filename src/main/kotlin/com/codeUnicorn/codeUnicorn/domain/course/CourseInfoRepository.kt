@@ -48,8 +48,14 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     fun findSortedByPopularAllCourseList(@Param("paging") page: Int): List<CourseInfo?>
 
     @Transactional
-    @Query(value = "select * from course where category = :category order by like_count desc limit :paging, 9", nativeQuery = true)
-    fun findSortedByPopularCategorizedCourseList(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo?>
+    @Query(
+        value = "select * from course where category = :category order by like_count desc limit :paging, 9",
+        nativeQuery = true
+    )
+    fun findSortedByPopularCategorizedCourseList(
+        @Param("category") category: String,
+        @Param("paging") page: Int
+    ): List<CourseInfo?>
 
     // 최신 순 코스 목록 조회
     @Transactional
@@ -61,8 +67,14 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     fun findSortedByNewAllCourseList(@Param("paging") page: Int): List<CourseInfo?>
 
     @Transactional
-    @Query(value = "select * from course where category = :category order by created_at desc limit :paging, 9", nativeQuery = true)
-    fun findSortedByNewCategorizedCourseList(@Param("category") category: String, @Param("paging") page: Int): List<CourseInfo?>
+    @Query(
+        value = "select * from course where category = :category order by created_at desc limit :paging, 9",
+        nativeQuery = true
+    )
+    fun findSortedByNewCategorizedCourseList(
+        @Param("category") category: String,
+        @Param("paging") page: Int
+    ): List<CourseInfo?>
 
     @Transactional
     @Query(value = "select * from course order by like_count desc limit 3", nativeQuery = true)
@@ -72,4 +84,13 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     @Modifying
     @Query(value = "update course set user_count = user_count + 1 where id = :id", nativeQuery = true)
     fun updateUserCount(@Param("id") id: Int)
+
+    // 코스 검색
+    @Transactional
+    @Query(value = "select * from course where name like :keyword", nativeQuery = true)
+    fun findSearchCourse(@Param("keyword") keyword: String?): List<CourseInfo?>
+
+    // 코스 검색 갯수
+    @Query(value = "select count(*) from course where name like :keyword", nativeQuery = true)
+    fun findSearchCourseCount(@Param("keyword") keyword: String?): Int
 }

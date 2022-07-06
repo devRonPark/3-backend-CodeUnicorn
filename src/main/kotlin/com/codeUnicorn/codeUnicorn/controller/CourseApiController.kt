@@ -4,9 +4,6 @@ import com.codeUnicorn.codeUnicorn.domain.SuccessResponse
 import com.codeUnicorn.codeUnicorn.domain.course.CourseInfo
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.service.CourseService
-import javax.servlet.http.HttpServletRequest
-import javax.validation.constraints.NotNull
-import javax.validation.constraints.Pattern
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -19,6 +16,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.servlet.http.HttpServletRequest
+import javax.validation.constraints.NotNull
+import javax.validation.constraints.Pattern
 
 private val log = KotlinLogging.logger {}
 
@@ -179,5 +179,17 @@ class CourseApiController {
     fun getTopThreeCourses(): ResponseEntity<List<CourseInfo?>> {
         val topThreeCourses = courseService.getTopThreeCourses()
         return ResponseEntity.status(HttpStatus.OK).body(topThreeCourses)
+    }
+
+    // 코스 검색
+    @GetMapping(path = ["/search"])
+    fun getSearchCourse(
+        @RequestParam(required = true)
+        keyword: String?
+    ): ResponseEntity<Any> {
+
+        val courseInfo = courseService.getSearchCourse(keyword)
+
+        return ResponseEntity.status(HttpStatus.OK).body(courseInfo)
     }
 }
