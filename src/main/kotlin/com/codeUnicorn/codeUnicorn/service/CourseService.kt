@@ -33,10 +33,12 @@ import javax.servlet.http.HttpSession
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 private val log = KotlinLogging.logger {}
 
 @Service
+@Transactional
 class CourseService {
     @Autowired
     private lateinit var courseRepository: CourseInfoRepository
@@ -245,6 +247,7 @@ class CourseService {
         // 사용자 코스 신청 기록 저장
         val savedAppliedCourse = appliedCourseRepository.save(appliedCourse)
         log.info { "신청된 코스 정보 : $savedAppliedCourse" }
+        courseRepository.updateUserCount(courseId)
         return savedAppliedCourse
     }
 

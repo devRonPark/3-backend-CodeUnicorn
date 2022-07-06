@@ -1,6 +1,7 @@
 package com.codeUnicorn.codeUnicorn.domain.course
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -66,4 +67,9 @@ interface CourseInfoRepository : JpaRepository<CourseInfo, Int> {
     @Transactional
     @Query(value = "select * from course order by like_count desc limit 3", nativeQuery = true)
     fun findTopThreeCourseList(): List<CourseInfo?>
+
+    @Transactional
+    @Modifying
+    @Query(value = "update course set user_count = user_count + 1 where id = :id", nativeQuery = true)
+    fun updateUserCount(@Param("id") id: Int)
 }
