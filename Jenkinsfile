@@ -41,9 +41,9 @@ pipeline {
             echo 'Bulid Gradle'
             dir('.'){
                 sh """
-                cp /var/jenkins_home/slack-logback.yml /var/jenkins_home/workspace/CodeUnicon/src/main/resources/slack-logback.yml
-                cp /var/jenkins_home/keystore.p12 /var/jenkins_home/workspace/CodeUnicon/src/main/resources/keystore.p12
-                cp /var/jenkins_home/application-prod.yml /var/jenkins_home/workspace/CodeUnicon/src/main/resources/application-prod.yml
+                cp /var/jenkins_home/slack-logback.yml /var/jenkins_home/workspace/CodeUnicorn/src/main/resources/slack-logback.yml
+                cp /var/jenkins_home/keystore.p12 /var/jenkins_home/workspace/CodeUnicorn/src/main/resources/keystore.p12
+                cp /var/jenkins_home/application-prod.yml /var/jenkins_home/workspace/CodeUnicorn/src/main/resources/application-prod.yml
                 gradle clean build -x test
                 """
             }
@@ -64,7 +64,7 @@ pipeline {
           steps {
             echo 'Bulid Docker'
             script {
-            dir('../CodeUnicon'){
+            dir('../CodeUnicorn'){
             // 생성된 도커 이미지가 있으면 삭제 후 빌드, 아니면 그냥 빌드
             sh """#!/bin/bash
             if [ -z "docker images | grep xhfkd00/codeunicorn:1.0" ]; then
@@ -94,7 +94,7 @@ pipeline {
           steps {
             echo 'Push Docker'
             script {
-            dir('../CodeUnicon'){
+            dir('../CodeUnicorn'){
             docker.withRegistry('', registryCredential) {
                     sh "docker push xhfkd00/codeunicorn:1.0"
                 }
