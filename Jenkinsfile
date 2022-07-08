@@ -116,19 +116,37 @@ pipeline {
            steps {
               echo 'SSH'
                 sshagent(['ubuntu']) {
-                sh 'ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-124-26-116.ap-northeast-2.compute.amazonaws.com "sudo /home/ubuntu/continer.sh"' // 서버 스크립트 실행
-              }
+//                 sh 'ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-124-26-116.ap-northeast-2.compute.amazonaws.com "sudo /home/ubuntu/continer.sh"' // 서버 스크립트 실행
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@3.35.50.198 "sudo /home/ubuntu/continer.sh"' // 서버 스크립트 실행
+                }
            }
            post {
-            success{
-             echo 'Successfully SSH EC2 script'
-            }
-             failure {
-              error 'This pipeline stops here...'
-             }
+               success{
+                   echo 'Successfully SSH EC2 script'
+               }
+               failure {
+                   error 'This pipeline stops here...'
+               }
            }
         }
 
+        // AWS S3 도커이미지 백업
+        stage('S3 Push') {
+            steps {
+                echo 'SSH'
+                    sshagent(['ubuntu']) {
+                        sh 'ssh -o StrictHostKeyChecking=no ubuntu@3.35.50.198 "sudo /home/ubuntu/docker-backup.sh"' // 서버 스크립트 실행
+                    }
+                }
+                post {
+                    success{
+                        echo 'Successfully S3 Push'
+                    }
+                    failure {
+                        error 'This pipeline stops here...'
+                    }
+                }
+            }
     }
     // 빌드 성공, 실패 여부 슬랙 전송
     post {

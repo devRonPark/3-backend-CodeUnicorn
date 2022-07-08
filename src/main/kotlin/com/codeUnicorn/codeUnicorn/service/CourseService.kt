@@ -284,7 +284,7 @@ class CourseService {
     fun getSearchCourse(keyword: String?): Any {
 
         // 키워드가 빈값이라면 모든 코스 조회로 연결
-        if (keyword?.isEmpty() == true) {
+        if (keyword == "all") {
             val courseList = courseRepository.findByAllCourseList()
             val courseCount = courseRepository.findByAllCourseCount()
 
