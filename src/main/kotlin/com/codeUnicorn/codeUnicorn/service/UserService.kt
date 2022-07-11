@@ -4,6 +4,7 @@ import com.codeUnicorn.codeUnicorn.constant.BEHAVIOR_TYPE
 import com.codeUnicorn.codeUnicorn.constant.ExceptionMessage
 import com.codeUnicorn.codeUnicorn.domain.course.AppliedCourse
 import com.codeUnicorn.codeUnicorn.domain.course.AppliedCourseRepository
+import com.codeUnicorn.codeUnicorn.domain.course.LikeCourseInfo
 import com.codeUnicorn.codeUnicorn.domain.course.LikeCourseInfoRepository
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.domain.user.UserAccessLog
@@ -12,13 +13,10 @@ import com.codeUnicorn.codeUnicorn.domain.user.UserRepository
 import com.codeUnicorn.codeUnicorn.dto.CreateUserDto
 import com.codeUnicorn.codeUnicorn.dto.RequestUserDto
 import com.codeUnicorn.codeUnicorn.dto.UserAccessLogDto
-import com.codeUnicorn.codeUnicorn.exception.AppliedCourseNotExistException
-import com.codeUnicorn.codeUnicorn.exception.LikeCourseNotExistException
 import com.codeUnicorn.codeUnicorn.exception.MySQLException
 import com.codeUnicorn.codeUnicorn.exception.NicknameAlreadyExistException
-import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
+import com.codeUnicorn.codeUnicorn.exception.NotFoundException
 import com.codeUnicorn.codeUnicorn.exception.UserAlreadyExistException
-import com.codeUnicorn.codeUnicorn.exception.UserNotExistException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.IOException
 import java.time.LocalDateTime
@@ -51,19 +49,24 @@ class UserService {
     private lateinit var likeCourseInfoRepository: LikeCourseInfoRepository
 
     @Async
-    @Throws(UserNotExistException::class)
+    @Throws(NotFoundException::class, MySQLException::class)
     fun getUserInfo(userId: Int): CompletableFuture<User> {
-        log.info { "(서비스) : 사용자 정보 조회 쿼리" }
         val userInfoFuture = CompletableFuture.supplyAsync(fun(): User? {
             return userRepository.findByIdOrNull(userId)
         })
-        val userInfo = userInfoFuture.join()
-        if (userInfo == null || userInfo.deletedAt != null) throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
-        log.info { "(서비스) : 사용자 정보 조회 완료" }
+        val userInfo:User?
+        try {
+            userInfo = userInfoFuture.join()
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
+
+        if (userInfo == null || userInfo.deletedAt != null) throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         return CompletableFuture.completedFuture(userInfo)
     }
 
-    @Throws(UserAlreadyExistException::class)
+    @Throws(UserAlreadyExistException::class, MySQLException::class)
     fun signup(
         requestUserDto: RequestUserDto,
         request: HttpServletRequest,
@@ -72,8 +75,16 @@ class UserService {
         val (email, nickname) = requestUserDto
         // request body의 email 값에 따라 platformType 결정
         val platformType = email.slice((email.indexOf("@") + 1) until email.indexOf("."))
+        val isUserAlreadyExist: Boolean
+        try {
+            isUserAlreadyExist = userRepository.findByEmail(email) != null
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
+
         // 이메일로 사용자 존재 여부 파악
-        if (userRepository.findByEmail(email) != null) {
+        if (isUserAlreadyExist) {
             throw UserAlreadyExistException(ExceptionMessage.USER_ALREADY_EXIST)
         }
 
@@ -93,22 +104,35 @@ class UserService {
             )
         // 사용자 정보 DTO => 사용자 정보 엔티티로 변환
         val user = newUserDto.toEntity()
-        userRepository.save(user) // 회원 정보 DB에 저장
+
+        try {
+            userRepository.save(user) // 회원 정보 DB에 저장
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
+
         return user
     }
 
     // 리턴 값 : { "type": "로그인" || "회원가입", "data": { 사용자 정보 } }
     @Transactional // 트랜잭션 => 실패 => 롤백!
+    @Throws(NotFoundException::class, MySQLException::class)
     fun login(
         requestUserDto: RequestUserDto,
         request: HttpServletRequest,
         response: HttpServletResponse
     ): Map<String, Any> {
         val (email) = requestUserDto
-
+        val userInfoInDb: User
         // 이메일로 사용자 존재 여부 파악
-        val userInfoInDb: User = userRepository.findByEmail(email)
-            ?: throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        try {
+            userInfoInDb = userRepository.findByEmail(email)
+                ?: throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
 
         // 세션 발급
         // 세션이 존재하지 않는 경우 신규 세션 발급
@@ -142,17 +166,23 @@ class UserService {
 
         val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
 
-        userAccessLogRepository.save(userAccessLogEntity)
+        try {
+            // 사용자의 로그인 로그 저장
+            userAccessLogRepository.save(userAccessLogEntity)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
 
         return returnData
     }
 
-    @Throws(SessionNotExistException::class)
+    @Throws(NotFoundException::class)
     fun logout(request: HttpServletRequest) {
         // 세션 가져오기
         // 세션이 존재하지 않는 경우 예외 발생(404, 세션이 존재하지 않음)
         val session: HttpSession = request.getSession(false)
-            ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
+            ?: throw NotFoundException(ExceptionMessage.SESSION_NOT_EXIST)
         log.info { "session: $session" }
         // 세션 속 저장되어 있는 사용자 정보 가져오기
         val userInfoInSession: User =
@@ -177,7 +207,14 @@ class UserService {
                     session.id
                 )
             val userAccessLogEntity: UserAccessLog = userAccessLog.toEntity()
-            userAccessLogRepository.save(userAccessLogEntity)
+
+            try {
+                // 사용자의 로그아웃 로그 저장
+                userAccessLogRepository.save(userAccessLogEntity)
+            } catch (e: IOException) {
+                log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+                throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+            }
         }
     }
 
@@ -224,13 +261,19 @@ class UserService {
     // 사용자 닉네임 업데이트
     @Async
     @Transactional
+    @Throws(NicknameAlreadyExistException::class, MySQLException::class)
     fun updateNickname(userId: Int, nickname: String): CompletableFuture<Int?> {
         log.info { "(서비스) : 닉네임 중복여부 체크" }
         val nickDuplicatedCheckFuture = CompletableFuture.supplyAsync(fun(): User? {
-            log.info { "(서비스) : 닉네임 중복여부 조회 쿼리 날림" }
             return userRepository.findByNickname(nickname)
         })
-        val nickDuplicateCheckResult = nickDuplicatedCheckFuture.join()
+        val nickDuplicateCheckResult: User?
+        try {
+            nickDuplicateCheckResult = nickDuplicatedCheckFuture.join()
+            log.info { "(서비스) : 닉네임 중복여부 조회" }
+        } catch (e:IOException) {
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
 
         if (nickDuplicateCheckResult != null) {
             log.info { "(서비스) : 닉네임 중복됨" }
@@ -240,25 +283,37 @@ class UserService {
         val updatedAt = LocalDateTime.now()
         // 중복되는 닉네임이 존재하지 않는 경우 사용자 닉네임 업데이트
         val nicknameUpdateFuture = CompletableFuture.supplyAsync(fun(): Int? {
-            log.info { "(서비스) : 닉네임 업데이트 쿼리 날림" }
             return userRepository.updateNickname(userId, nickname, updatedAt)
         })
-        val nicknameUpdateResult = nicknameUpdateFuture.join()
-        log.info { "(서비스) : 닉네임 업데이트 완료" }
+        val nicknameUpdateResult: Int?
+        try {
+            nicknameUpdateResult = nicknameUpdateFuture.join()
+            log.info { "(서비스) : 닉네임 업데이트" }
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
         return CompletableFuture.completedFuture(nicknameUpdateResult)
     }
 
     // 사용자 프로필 업데이트
     @Async
     @Transactional
+    @Throws(MySQLException::class)
     fun updateUserProfile(userId: Int, profilePath: String): CompletableFuture<Int?> {
         val updatedAt = LocalDateTime.now()
         val userProfileUpdateFuture = CompletableFuture.supplyAsync(fun(): Int? {
-            log.info { "(서비스) : 프로필 이미지 경로 사용자 정보 업데이트 쿼리 날림" }
             return userRepository.updateProfile(userId, profilePath, updatedAt)
         })
-        val userProfileUpdateResult = userProfileUpdateFuture.join()
-        log.info { "(서비스) : 프로필 이미지 경로 사용자 정보 업데이트 완료" }
+        val userProfileUpdateResult: Int?
+        try {
+            userProfileUpdateResult = userProfileUpdateFuture.join()
+            log.info { "(서비스) : 프로필 이미지 경로 사용자 정보 업데이트" }
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
+
         return CompletableFuture.completedFuture(userProfileUpdateResult)
     }
 
@@ -271,27 +326,30 @@ class UserService {
         try {
             userRepository.deleteUser(userId, deletedAt)
         } catch (e: IOException) {
-            throw MySQLException(ExceptionMessage.UPDATE_QUERY_FAIL)
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
     }
 
     // 사용자가 신청한 코스 목록 조회
-    @Throws(AppliedCourseNotExistException::class, MySQLException::class)
+    @Throws(NotFoundException::class, MySQLException::class)
     fun getAppliedList(userId: Int): MutableList<MutableMap<String, Any?>> {
         var courseList: MutableList<AppliedCourse?>
         try {
             courseList = appliedCourseRepository.findByUserId(userId)
         } catch (e: IOException) {
             // 조회 쿼리 요청 중 실패 시
-            throw MySQLException(ExceptionMessage.SELECT_QUERY_FAIL)
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
 
         // 사용자가 신청한 코스가 존재하지 않는 경우
-        if (courseList.size == 0) throw AppliedCourseNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        if (courseList.size == 0) throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
 
         val responseData = mutableListOf<MutableMap<String, Any?>>()
         courseList.forEach(fun(it) {
             val appliedCourseInfo = mutableMapOf<String, Any?>()
+            appliedCourseInfo["category"] = it?.course?.category
             appliedCourseInfo["courseId"] = it?.course?.id
             appliedCourseInfo["name"] = it?.course?.name
             appliedCourseInfo["imagePath"] = it?.course?.imagePath
@@ -312,18 +370,22 @@ class UserService {
     }
 
     // 사용자의 관심 코스 목록 조회
+    @Throws(NotFoundException::class, MySQLException::class)
     fun getLikeCourseList(userId: Int): HashMap<String, Any?> {
-
-        val likeCourseList = likeCourseInfoRepository.findByLikeCourseList(userId)
+        val likeCourseList: List<LikeCourseInfo>
+        try {
+            likeCourseList = likeCourseInfoRepository.findByLikeCourseList(userId)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
 
         if (likeCourseList.isEmpty()) {
-            throw LikeCourseNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+            throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         }
 
         val likeCourseCount = likeCourseInfoRepository.findByLikeCourseCount(userId)
-
         val likeCourseResponse = HashMap<String, Any?>()
-
         val likeCourseData = mutableListOf<MutableMap<String, Any?>>()
 
         for (i in likeCourseList.indices) {
@@ -346,10 +408,16 @@ class UserService {
         return likeCourseResponse
     }
 
-    @Throws(UserNotExistException::class)
+    @Throws(NotFoundException::class)
     fun getUserInfoList(): MutableList<User?> {
-        val userInfoList = userRepository.getUserInfoList()
-        if (userInfoList.size == 0) throw UserNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        val userInfoList: MutableList<User?>
+        try {
+            userInfoList = userRepository.getUserInfoList()
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
+        if (userInfoList.size == 0) throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         return userInfoList
     }
 }

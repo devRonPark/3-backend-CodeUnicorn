@@ -26,14 +26,14 @@ import com.codeUnicorn.codeUnicorn.exception.RequestParamNotValidException
 import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.io.IOException
 import java.time.LocalDateTime
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpSession
+import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 private val log = KotlinLogging.logger {}
 
@@ -173,7 +173,7 @@ class CourseService {
         try {
             curriculumInfo = curriculumInfoRepository.findByCourseId(courseId)
         } catch (e: RuntimeException) {
-            throw MySQLException(ExceptionMessage.SELECT_QUERY_FAIL)
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
 
         if (curriculumInfo.isEmpty()) {
@@ -275,7 +275,7 @@ class CourseService {
         try {
             topThreeCourses = courseRepository.findTopThreeCourseList()
         } catch (e: IOException) {
-            throw MySQLException(ExceptionMessage.SELECT_QUERY_FAIL)
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
         return topThreeCourses
     }
