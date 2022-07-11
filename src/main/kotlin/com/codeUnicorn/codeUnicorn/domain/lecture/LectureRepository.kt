@@ -14,5 +14,5 @@ interface LectureRepository : JpaRepository<LectureDetailInfo, Int> {
     fun findByLectureInfo(
         @Param("courseId") courseId: String,
         @Param("lectureId") lectureId: String
-    ): LectureDetailInfo
+    ): LectureDetailInfo?
 }

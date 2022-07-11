@@ -13,17 +13,16 @@ import com.codeUnicorn.codeUnicorn.domain.course.LikeCourseUpdateRepository
 import com.codeUnicorn.codeUnicorn.domain.course.SectionInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureDetailInfo
 import com.codeUnicorn.codeUnicorn.domain.lecture.LectureRepository
+import com.codeUnicorn.codeUnicorn.domain.likeCourse.LikeCourse
 import com.codeUnicorn.codeUnicorn.domain.likeCourse.LikeCourseRepository
 import com.codeUnicorn.codeUnicorn.domain.user.User
 import com.codeUnicorn.codeUnicorn.dto.AppliedCourseDto
 import com.codeUnicorn.codeUnicorn.dto.CreateCourseLikeDto
 import com.codeUnicorn.codeUnicorn.exception.AppliedCourseAlreadyExistException
-import com.codeUnicorn.codeUnicorn.exception.CourseNotExistException
-import com.codeUnicorn.codeUnicorn.exception.CurriculumNotExistException
 import com.codeUnicorn.codeUnicorn.exception.LikeCourseAlreadyExistException
 import com.codeUnicorn.codeUnicorn.exception.MySQLException
+import com.codeUnicorn.codeUnicorn.exception.NotFoundException
 import com.codeUnicorn.codeUnicorn.exception.RequestParamNotValidException
-import com.codeUnicorn.codeUnicorn.exception.SessionNotExistException
 import com.codeUnicorn.codeUnicorn.exception.UserUnauthorizedException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.IOException
@@ -65,7 +64,7 @@ class CourseService {
     private lateinit var likeCourseDeleteRepository: LikeCourseDeleteRepository
 
     // 코스 정보 조회
-    @Throws(CourseNotExistException::class)
+    @Throws(NotFoundException::class, MySQLException::class)
     fun getCourseList(category: String?, sortBy: String?, page: Int): List<CourseInfo?> {
         val paging = if (page == 1 || page == 0) {
             0
@@ -99,34 +98,40 @@ class CourseService {
         }
 
         var courseInfoInDb: List<CourseInfo?> = listOf()
-        if (category == "all") {
-            if (sortBy == "popular") {
-                courseInfoInDb = courseRepository.findSortedByPopularAllCourseList(paging)
-            } else if (sortBy == "new") {
-                courseInfoInDb = courseRepository.findSortedByNewAllCourseList(paging)
+
+        try {
+            if (category == "all") {
+                if (sortBy == "popular") {
+                    courseInfoInDb = courseRepository.findSortedByPopularAllCourseList(paging)
+                } else if (sortBy == "new") {
+                    courseInfoInDb = courseRepository.findSortedByNewAllCourseList(paging)
+                }
+            } else if (categoryList.containsKey(category)) {
+                if (sortBy == "popular") { // 인기순
+                    courseInfoInDb = courseRepository.findSortedByPopularCategorizedCourseList(
+                        categoryList[category] ?: "",
+                        paging
+                    )
+                } else if (sortBy == "new") { // 최신순
+                    courseInfoInDb = courseRepository.findSortedByNewCategorizedCourseList(
+                        categoryList[category] ?: "",
+                        paging
+                    )
+                }
             }
-        } else if (categoryList.containsKey(category)) {
-            if (sortBy == "popular") { // 인기순
-                courseInfoInDb = courseRepository.findSortedByPopularCategorizedCourseList(
-                    categoryList[category] ?: "",
-                    paging
-                )
-            } else if (sortBy == "new") { // 최신순
-                courseInfoInDb = courseRepository.findSortedByNewCategorizedCourseList(
-                    categoryList[category] ?: "",
-                    paging
-                )
-            }
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
         // 코스 데이터가 존재하지 않을 경우 404 Not Found
         if (courseInfoInDb.isEmpty()) {
-            throw CourseNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+            throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         }
-
         return courseInfoInDb
     }
 
     // 코스 전체 개수 조회
+    @Throws(MySQLException::class)
     fun getCourseCount(category: String?): Int {
         val categoryList = mapOf(
             "frontend" to "프론트엔드",
@@ -137,61 +142,79 @@ class CourseService {
             "database" to "데이터베이스"
         )
 
-        val courseCount = if (category == "all") {
-            courseRepository.findByAllCourseCount()
-        } else {
-            courseRepository.findByCourseCount(categoryList[category] ?: "")
+        try {
+            val courseCount = if (category == "all") {
+                courseRepository.findByAllCourseCount()
+            } else {
+                courseRepository.findByCourseCount(categoryList[category] ?: "")
+            }
+            return courseCount
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
-
-        return courseCount
     }
 
     // 코스 상세 정보 조회
+    @Throws(NotFoundException::class, MySQLException::class)
     fun getCourseDetail(courseId: String): CourseDetail {
-
-        var courseDetailInfo: CourseDetail
-
-        courseDetailInfo = courseDetailRepository.findByCourseDetail(courseId)
-
-        return courseDetailInfo
+        val courseDetail: CourseDetail?
+        try {
+            courseDetail = courseDetailRepository.findByCourseDetail(courseId)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
+        if (courseDetail == null) throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
+        return courseDetail
     }
 
     // 강의 상세 정보 조회
+    @Throws(NotFoundException::class)
     fun getLectureInfo(courseId: String, lectureId: String): LectureDetailInfo {
-
-        var lectureInfo: LectureDetailInfo
-
-        lectureInfo = lectureRepository.findByLectureInfo(courseId, lectureId)
-
+        val lectureInfo: LectureDetailInfo?
+        try {
+            lectureInfo = lectureRepository.findByLectureInfo(courseId, lectureId)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
+        if (lectureInfo == null) throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         return lectureInfo
     }
 
     // 코스 커리큘럼 조회
-    @Throws(CurriculumNotExistException::class)
+    @Throws(NotFoundException::class, MySQLException::class)
     fun getCurriculumInfo(courseId: Int): List<SectionInfo?> {
         val curriculumInfo: List<SectionInfo?>
         try {
             curriculumInfo = curriculumInfoRepository.findByCourseId(courseId)
-        } catch (e: RuntimeException) {
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
             throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
-
         if (curriculumInfo.isEmpty()) {
-            throw CurriculumNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+            throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         }
         return curriculumInfo
     }
 
     // 모든 강의 정보 조회
+    @Throws(MySQLException::class)
     fun getCourseAllList(): List<CourseInfo> {
-        return courseRepository.findByAllCourseList()
+        try {
+            return courseRepository.findByAllCourseList()
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
     }
 
     // 관심 코스 등록
+    @Throws(LikeCourseAlreadyExistException::class)
     fun postCourseLike(request: HttpServletRequest, courseId: Int) {
-
         val session: HttpSession = request.getSession(false)
-            ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
+            ?: throw NotFoundException(ExceptionMessage.SESSION_NOT_EXIST)
 
         // 세션 속 저장되어 있는 사용자 정보 가져오기
         val userInfoInSession: User =
@@ -199,10 +222,14 @@ class CourseService {
 
         // 세션 속 저장되어 있는 사용자 indexId 변수에 할당
         val userId = userInfoInSession.id
-
-        // 사용자 indexId 기반으로 courseId를 좋아요 했는지 확인
-        val likeCourseDB = likeCourseRepository.findByLikeCourse(userId, courseId)
-
+        val likeCourseDB: LikeCourse?
+        try {
+            // 사용자 indexId 기반으로 courseId를 좋아요 했는지 확인
+            likeCourseDB = likeCourseRepository.findByLikeCourse(userId, courseId)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
         // 이미 관심 코스로 등록되어 있는 경우 에러 발생
         if (likeCourseDB != null) {
             throw LikeCourseAlreadyExistException(ExceptionMessage.LIKE_COURSE_ALREADY_EXIST)
@@ -213,13 +240,18 @@ class CourseService {
             courseId
         )
 
-        likeCourseUpdateRepository.likeCountUpdate(courseId)
+        try {
+            likeCourseUpdateRepository.likeCountUpdate(courseId)
 
-        val likeCourse = newCourseLikeDto.toEntity()
-        likeCourseRepository.save(likeCourse)
+            val likeCourse = newCourseLikeDto.toEntity()
+            likeCourseRepository.save(likeCourse)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
     }
 
-    @Throws(AppliedCourseAlreadyExistException::class)
+    @Throws(AppliedCourseAlreadyExistException::class, UserUnauthorizedException::class)
     fun applyCourse(courseId: Int, request: HttpServletRequest): AppliedCourse? {
         val session: HttpSession? = request.getSession(false)
         log.info { "session: $session" }
@@ -236,26 +268,38 @@ class CourseService {
         // userId 가 세션 안에 존재하지 않는다면 로그인하지 않았다는 의미
         val userId = userInfoInSession.id
             ?: throw UserUnauthorizedException(ExceptionMessage.UNAUTHORIZED_USER_CANNOT_ACCESS)
-
-        // 사용자 코스 신청 정보 전 기존 신청 여부 검증
-        val isCourseAlreadyApplied = appliedCourseRepository.isAlreadyExist(userId, courseId)?.toInt() == 1
+        val isCourseAlreadyApplied: Boolean
+        try {
+            // 사용자 코스 신청 정보 전 기존 신청 여부 검증
+            isCourseAlreadyApplied = appliedCourseRepository.isAlreadyExist(userId, courseId)?.toInt() == 1
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
         if (isCourseAlreadyApplied) {
             throw AppliedCourseAlreadyExistException(ExceptionMessage.APPLIED_COURSE_ALREADY_EXIST)
         }
-        // 사용자 코스 신청 정보 저장
-        val appliedCourse = AppliedCourseDto(userId, courseId).toEntity()
-        // 사용자 코스 신청 기록 저장
-        val savedAppliedCourse = appliedCourseRepository.save(appliedCourse)
-        log.info { "신청된 코스 정보 : $savedAppliedCourse" }
-        courseRepository.updateUserCount(courseId)
-        return savedAppliedCourse
+
+        try {
+            // 사용자 코스 신청 정보 저장
+            val appliedCourse = AppliedCourseDto(userId, courseId).toEntity()
+            // 사용자 코스 신청 기록 저장
+            val savedAppliedCourse = appliedCourseRepository.save(appliedCourse)
+            log.info { "신청된 코스 정보 : $savedAppliedCourse" }
+            courseRepository.updateUserCount(courseId)
+            return savedAppliedCourse
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
     }
 
     // 관심 교욱 목록 삭제
+    @Throws(NotFoundException::class)
     fun deleteLikeCourse(request: HttpServletRequest, courseId: Int) {
 
         val session: HttpSession = request.getSession(false)
-            ?: throw SessionNotExistException(ExceptionMessage.SESSION_NOT_EXIST)
+            ?: throw NotFoundException(ExceptionMessage.SESSION_NOT_EXIST)
 
         // 세션 속 저장되어 있는 사용자 정보 가져오기
         val userInfoInSession: User =
@@ -265,28 +309,42 @@ class CourseService {
         val userId = userInfoInSession.id
 
         val deletedAt = LocalDateTime.now()
-
-        likeCourseDeleteRepository.deleteByLikeCourse(deletedAt, userId, courseId)
+        try {
+            likeCourseDeleteRepository.deleteByLikeCourse(deletedAt, userId, courseId)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
     }
 
-    @Throws(MySQLException::class)
+    @Throws(MySQLException::class, NotFoundException::class)
     fun getTopThreeCourses(): List<CourseInfo?> {
         var topThreeCourses: List<CourseInfo?>
         try {
             topThreeCourses = courseRepository.findTopThreeCourseList()
         } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
             throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
+        if (topThreeCourses.isEmpty()) throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         return topThreeCourses
     }
 
     // 코스 검색
+    @Throws(NotFoundException::class)
     fun getSearchCourse(keyword: String?): Any {
 
         // 키워드가 빈값이라면 모든 코스 조회로 연결
         if (keyword == "all") {
-            val courseList = courseRepository.findByAllCourseList()
-            val courseCount = courseRepository.findByAllCourseCount()
+            val courseList: List<CourseInfo?>
+            val courseCount: Int
+            try {
+                courseList = courseRepository.findByAllCourseList()
+                courseCount = courseRepository.findByAllCourseCount()
+            } catch (e: IOException) {
+                log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+                throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+            }
 
             val courseInfo = HashMap<String, Any>()
             courseInfo["courses"] = courseList
@@ -296,16 +354,27 @@ class CourseService {
 
         // MYSQL like 문 사용하기 위하여 가공
         val searchKeyword = "%$keyword%"
-        // 키워드로 코스 정보 조회
-        val courseList = courseRepository.findSearchCourse(searchKeyword)
+        val courseList: List<CourseInfo?>
+        try {
+            // 키워드로 코스 정보 조회
+            courseList = courseRepository.findSearchCourse(searchKeyword)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
 
         // 코스 정보 조회가 빈 값이라면
         if (courseList.isEmpty()) {
-            throw CourseNotExistException(ExceptionMessage.RESOURCE_NOT_EXIST)
+            throw NotFoundException(ExceptionMessage.RESOURCE_NOT_EXIST)
         }
-
-        // 키워드로 코스 갯수 조회
-        val courseCount = courseRepository.findSearchCourseCount(searchKeyword)
+        val courseCount: Int
+        try {
+            // 키워드로 코스 갯수 조회
+            courseCount = courseRepository.findSearchCourseCount(searchKeyword)
+        } catch (e: IOException) {
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
+        }
 
         // 데이터 가공
         val courseInfo = HashMap<String, Any>()

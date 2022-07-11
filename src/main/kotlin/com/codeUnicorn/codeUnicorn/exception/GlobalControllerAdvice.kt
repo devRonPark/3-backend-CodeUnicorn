@@ -47,4 +47,20 @@ class GlobalControllerAdvice {
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse)
     }
+
+    @ExceptionHandler(value = [NotFoundException::class])
+    fun handleNotFoundException(
+        e: NotFoundException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        // ErrorResponse
+        val errorResponse = ErrorResponse().apply {
+            this.status = HttpStatus.NOT_FOUND.value()
+            this.message = e.message.toString()
+            this.method = request.method
+            this.path = request.requestURI.toString()
+        }
+        // ResponseEntity
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
+    }
 }

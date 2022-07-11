@@ -87,40 +87,6 @@ class UserControllerAdvice {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse)
     }
 
-    // 사용자 정보가 존재하지 않을 시 발생
-    @ExceptionHandler(value = [UserNotExistException::class])
-    fun handleUserNotExistException(
-        e: UserNotExistException,
-        request: HttpServletRequest
-    ): ResponseEntity<ErrorResponse> {
-        // ErrorResponse
-        val errorResponse = ErrorResponse().apply {
-            this.status = HttpStatus.NOT_FOUND.value()
-            this.message = e.message.toString()
-            this.method = request.method
-            this.path = request.requestURI.toString()
-        }
-        // ResponseEntity
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
-    }
-
-    // 세션이 존재하지 않을 시 발생
-    @ExceptionHandler(value = [SessionNotExistException::class])
-    fun handleSessionNotExistException(
-        e: SessionNotExistException,
-        request: HttpServletRequest
-    ): ResponseEntity<ErrorResponse> {
-        // ErrorResponse
-        val errorResponse = ErrorResponse().apply {
-            this.status = HttpStatus.NOT_FOUND.value()
-            this.message = e.message.toString()
-            this.method = request.method
-            this.path = request.requestURI.toString()
-        }
-        // ResponseEntity
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
-    }
-
     // 닉네임 중복에 대한 예외 처리
     @ExceptionHandler(value = [NicknameAlreadyExistException::class])
     fun handleNicknameAlreadyExistException(
@@ -238,23 +204,6 @@ class UserControllerAdvice {
         }
         // ResponseEntity
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
-    }
-
-    // 신청한 코스가 존재하지 않을 시 발생
-    @ExceptionHandler(value = [AppliedCourseNotExistException::class])
-    fun handleAppliedCourseNotExistException(
-        e: AppliedCourseNotExistException,
-        request: HttpServletRequest
-    ): ResponseEntity<ErrorResponse> {
-        // ErrorResponse
-        val errorResponse = ErrorResponse().apply {
-            this.status = HttpStatus.NOT_FOUND.value()
-            this.message = e.message.toString()
-            this.method = request.method
-            this.path = request.requestURI.toString()
-        }
-        // ResponseEntity
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
     }
 
     @ExceptionHandler(value = [AppliedCourseAlreadyExistException::class])

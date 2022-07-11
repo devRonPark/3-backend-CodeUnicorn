@@ -72,7 +72,8 @@ class S3FileUploadService {
             })
             fileUploadFuture.join()
         } catch (e: IOException) {
-            throw FileUploadFailException(ExceptionMessage.FILE_UPLOAD_FAIL)
+            log.error { "INTERNAL SERVER ERROR: ${e.message}" }
+            throw FileUploadFailException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
 
         val originalFilename: String = uploadFile.originalFilename ?: ""

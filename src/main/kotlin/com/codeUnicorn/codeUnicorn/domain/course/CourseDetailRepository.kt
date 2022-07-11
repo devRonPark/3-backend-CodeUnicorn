@@ -12,5 +12,5 @@ interface CourseDetailRepository : JpaRepository<CourseDetail, Int> {
         value = "select * from course inner join instructor on course.instructor_id = instructor.id  where course.id = :courseId",
         nativeQuery = true
     )
-    fun findByCourseDetail(@Param("courseId") courseId: String): CourseDetail
+    fun findByCourseDetail(@Param("courseId") courseId: String): CourseDetail?
 }

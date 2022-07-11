@@ -67,23 +67,6 @@ class CourseControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
     }
 
-    // 커리큘럼 정보가 존재하지 않을 시 발생
-    @ExceptionHandler(value = [CurriculumNotExistException::class])
-    fun handleResourceNotExistException(
-        e: CurriculumNotExistException,
-        request: HttpServletRequest
-    ): ResponseEntity<ErrorResponse> {
-        // ErrorResponse
-        val errorResponse = ErrorResponse().apply {
-            this.status = HttpStatus.NOT_FOUND.value()
-            this.message = e.message.toString()
-            this.method = request.method
-            this.path = request.requestURI.toString()
-        }
-        // ResponseEntity
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
-    }
-
     // 코스 관심 목록 추가시 추가가 되어 있는 코스일 경우 발생
     @ExceptionHandler(value = [LikeCourseAlreadyExistException::class])
     fun handleNicknameAlreadyExistException(
@@ -116,21 +99,5 @@ class CourseControllerAdvice {
             this.timestamp = LocalDateTime.now()
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
-    }
-
-    // 코스 데이터가 존재하지 않는 경우 발생
-    @ExceptionHandler(value = [CourseNotExistException::class])
-    fun handleCourseNotExistException(
-        e: CourseNotExistException,
-        request: HttpServletRequest
-    ): ResponseEntity<ErrorResponse> { // ErrorResponse
-        val errorResponse = ErrorResponse().apply {
-            this.status = HttpStatus.NOT_FOUND.value()
-            this.message = e.message.toString()
-            this.method = request.method
-            this.path = request.requestURI.toString()
-            this.timestamp = LocalDateTime.now()
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
     }
 }

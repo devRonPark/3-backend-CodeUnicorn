@@ -54,7 +54,7 @@ class UserService {
         val userInfoFuture = CompletableFuture.supplyAsync(fun(): User? {
             return userRepository.findByIdOrNull(userId)
         })
-        val userInfo:User?
+        val userInfo: User?
         try {
             userInfo = userInfoFuture.join()
         } catch (e: IOException) {
@@ -271,7 +271,7 @@ class UserService {
         try {
             nickDuplicateCheckResult = nickDuplicatedCheckFuture.join()
             log.info { "(서비스) : 닉네임 중복여부 조회" }
-        } catch (e:IOException) {
+        } catch (e: IOException) {
             throw MySQLException(ExceptionMessage.INTERNAL_SERVER_ERROR)
         }
 
